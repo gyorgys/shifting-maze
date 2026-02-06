@@ -106,16 +106,27 @@ Client runs on http://localhost:5173
 ### Game Management
 
 - **Create Games:** Generate unique 4-letter codes automatically
-- **Join Games:** Users join by entering game codes
+- **Join Games:** Users join by entering game codes and choosing colors
+- **Player Colors:** Four colors available (red, green, blue, white)
+- **Start Games:** 2-4 players required, player order randomized at start
+- **Turn Tracking:** Game tracks current player and turn phase (shift/move)
+- **Game Stages:** unstarted → playing → finished
 - **List Games:** View all games user is participating in
 - **Collision Prevention:** Retry logic for code generation
-- **Duplicate Prevention:** Users cannot join same game twice
+- **Duplicate Prevention:** Users cannot join same game twice or pick taken colors
 
 **Game Code Format:**
 - 4 uppercase letters (A-Z)
 - Randomly generated
 - 456,976 possible combinations
 - Validated for uniqueness
+
+**Game Flow:**
+1. User creates game (stage: unstarted)
+2. Players join and pick unique colors (2-4 players)
+3. Someone starts the game (player order randomized)
+4. Players take turns: shift phase → move phase
+5. Game ends (stage: finished)
 
 ### Data Persistence
 
@@ -141,14 +152,38 @@ server/data/
 }
 ```
 
-**Game File Example:**
+**Game File Example (Unstarted):**
 ```json
 {
   "code": "ABCD",
   "name": "Epic Adventure",
-  "users": ["john_doe", "jane_smith"],
   "createdAt": "2026-02-06T12:00:00.000Z",
-  "createdBy": "john_doe"
+  "createdBy": "john_doe",
+  "stage": "unstarted",
+  "players": [
+    { "username": "john_doe", "color": "red" },
+    { "username": "jane_smith", "color": "blue" }
+  ],
+  "maxPlayers": 4
+}
+```
+
+**Game File Example (Playing):**
+```json
+{
+  "code": "ABCD",
+  "name": "Epic Adventure",
+  "createdAt": "2026-02-06T12:00:00.000Z",
+  "createdBy": "john_doe",
+  "stage": "playing",
+  "players": [
+    { "username": "alice", "color": "green" },
+    { "username": "john_doe", "color": "red" },
+    { "username": "jane_smith", "color": "blue" }
+  ],
+  "maxPlayers": 4,
+  "currentPlayerIndex": 1,
+  "currentPhase": "move"
 }
 ```
 
@@ -283,7 +318,9 @@ shifting_maze/
 | POST | `/api/users/login` | Authenticate user |
 | POST | `/api/games` | Create new game |
 | GET | `/api/games?username=xxx` | List user's games |
-| POST | `/api/games/:code/join` | Join game by code |
+| POST | `/api/games/:code/join` | Join game with color selection |
+| PUT | `/api/games/:code/players/:username` | Update player's color (unstarted games only) |
+| POST | `/api/games/:code/start` | Start game (randomize players, begin play) |
 
 ## Contributing
 

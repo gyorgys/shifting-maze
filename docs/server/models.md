@@ -83,25 +83,78 @@ interface LoginResponse {
 
 **File:** [server/src/models/Game.ts](../../server/src/models/Game.ts)
 
+### Type Definitions
+
+```typescript
+type PlayerColor = 'red' | 'green' | 'blue' | 'white';
+type GameStage = 'unstarted' | 'playing' | 'finished';
+type TurnPhase = 'shift' | 'move';
+```
+
+### Player Interface
+
+Represents a player in a game with their chosen color.
+
+```typescript
+interface Player {
+  username: string;        // Player's username
+  color: PlayerColor;      // Player's chosen color
+}
+```
+
 ### Game Interface
 
-Represents a game instance.
+Represents a game instance with full state tracking.
 
 ```typescript
 interface Game {
   code: string;            // Unique 4-letter uppercase code (e.g., "ABCD")
   name: string;            // Game name (1-100 chars)
-  users: string[];         // Array of usernames of players in the game
   createdAt: string;       // ISO 8601 timestamp of game creation
   createdBy: string;       // Username of the game creator
+
+  // Game stage tracking
+  stage: GameStage;        // 'unstarted' | 'playing' | 'finished'
+
+  // Player tracking (2-4 players required to play)
+  players: Player[];       // Players with their chosen colors
+  maxPlayers: number;      // Always 4
+
+  // Turn tracking (only used when stage is 'playing')
+  currentPlayerIndex?: number;   // Index into players array
+  currentPhase?: TurnPhase;      // 'shift' | 'move'
 }
 ```
+
+**Game Stages:**
+- `unstarted`: Waiting for players to join (2-4 players needed)
+- `playing`: Game is in progress
+- `finished`: Game has ended
+
+**Turn Phases:**
+Each player's turn consists of two phases:
+1. `shift`: Player shifts a row or column on the board
+2. `move`: Player moves their piece on the board
+
+**Player Colors:**
+- Four colors available: `red`, `green`, `blue`, `white`
+- Each color can only be chosen by one player per game
+- Players must choose a color when joining
 
 **Validation Rules:**
 - `code`: Exactly 4 uppercase letters (A-Z), randomly generated
 - `name`: 1-100 characters
-- `users`: Array starts with creator, additional users join via join endpoint
-- `createdBy`: Must be a valid username
+- `players`: 2-4 players required to start the game
+- `maxPlayers`: Always 4
+- `currentPlayerIndex`: Set when game starts, randomized player order
+- `currentPhase`: Starts with 'shift' when game begins
+
+**Game Flow:**
+1. Game created in `unstarted` stage with no players
+2. Players join (2-4) and choose unique colors
+3. Game starts: player order randomized, stage becomes `playing`
+4. Players take turns (shift phase → move phase)
+5. Game ends and stage becomes `finished`
 
 **Code Generation:**
 - Format: 4 random uppercase letters
@@ -137,31 +190,96 @@ interface CreateGameResponse {
 
 ### ListGamesResponse
 
-Response for listing games.
+Response for listing games with detailed state information.
 
 ```typescript
 interface ListGamesResponse {
   games: Array<{
     code: string;
     name: string;
-    userCount: number;     // Number of players in the game
+    userCount: number;
+    stage: GameStage;      // 'unstarted' | 'playing' | 'finished'
+    players: Player[];     // Always present - list of players with their colors
+
+    // Available colors if game can be joined (stage is 'unstarted' and not full)
+    availableColors?: PlayerColor[];
+
+    // Current turn info if game is in progress (stage is 'playing')
+    currentTurn?: {
+      username: string;
+      color: PlayerColor;
+      phase: TurnPhase;    // 'shift' | 'move'
+    };
   }>;
 }
 ```
 
+**Always Present Fields:**
+- `players`: Array of all players in the game with their usernames and chosen colors. Present for all game stages.
+
+**Conditional Fields:**
+- `availableColors`: Only present when `stage` is 'unstarted' and game is not full (less than 4 players). Lists the colors that can still be chosen by new players.
+- `currentTurn`: Only present when `stage` is 'playing'. Shows whose turn it is, their color, and the current phase.
+
 ### JoinGameRequest
 
-Request body for joining a game.
+Request body for joining a game. Color is optional - if not provided, the first available color is automatically assigned.
 
 ```typescript
 interface JoinGameRequest {
-  username: string;
+  username: string;        // Player's username
+  color?: PlayerColor;     // Optional color ('red' | 'green' | 'blue' | 'white')
+                           // If not provided, first available color is auto-assigned
 }
 ```
+
+**Validation:**
+- If color is provided:
+  - Must be one of: 'red', 'green', 'blue', 'white'
+  - Must not already be taken by another player
+- Game must be in 'unstarted' stage
+- Game must not be full (max 4 players)
+
+**Auto-assignment:**
+- If no color is provided, the server assigns the first available color
+- Colors are assigned in order: red, green, blue, white
+- Players can change their color later using the PUT endpoint
+
+### StartGameRequest
+
+Request to start a game (no body needed, code comes from URL).
+
+```typescript
+interface StartGameRequest {
+  // No body needed
+}
+```
+
+**Requirements:**
+- Game must have 2-4 players
+- Game must be in 'unstarted' stage
+- Player order will be randomized when game starts
+
+### UpdatePlayerColorRequest
+
+Request body for updating a player's color in an unstarted game.
+
+```typescript
+interface UpdatePlayerColorRequest {
+  color: PlayerColor;  // New color to switch to
+}
+```
+
+**Validation:**
+- Color must be one of: 'red', 'green', 'blue', 'white'
+- Color must not be taken by another player
+- Game must be in 'unstarted' stage
+- Player must already be in the game
 
 ## Relationships
 
 - A **User** can be in multiple **Games**
-- A **Game** contains multiple **Users** (referenced by username)
-- The creator of a **Game** is automatically added to the users array
-- Users can join additional games using the game code
+- A **Game** contains multiple **Players** (2-4 players)
+- Each **Player** has a unique **PlayerColor** within a game
+- The creator of a **Game** must join as a player by choosing a color
+- Games track whose turn it is via `currentPlayerIndex` and `currentPhase`

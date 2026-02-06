@@ -157,7 +157,7 @@ Creates a new game with a randomly generated 4-letter code.
 
 ### List Games
 
-Retrieves all games that a specific user is part of.
+Retrieves all games that a specific user is part of, with detailed state information including available colors for joinable games and current turn info for games in progress.
 
 **Endpoint:** `GET /api/games?username={username}`
 
@@ -165,22 +165,83 @@ Retrieves all games that a specific user is part of.
 - `username` - The username to filter games by
 
 **Success Response (200 OK):**
+
+The response includes different fields based on the game's stage:
+
+**Example - Unstarted game (waiting for players):**
 ```json
 {
   "games": [
     {
       "code": "ABCD",
-      "name": "My Awesome Game",
-      "userCount": 3
-    },
-    {
-      "code": "WXYZ",
-      "name": "Another Game",
-      "userCount": 1
+      "name": "Waiting Room",
+      "userCount": 2,
+      "stage": "unstarted",
+      "players": [
+        { "username": "john_doe", "color": "red" },
+        { "username": "jane_smith", "color": "blue" }
+      ],
+      "availableColors": ["green", "white"]
     }
   ]
 }
 ```
+
+**Example - Playing game (in progress):**
+```json
+{
+  "games": [
+    {
+      "code": "WXYZ",
+      "name": "Active Game",
+      "userCount": 3,
+      "stage": "playing",
+      "players": [
+        { "username": "alice", "color": "blue" },
+        { "username": "bob", "color": "red" },
+        { "username": "charlie", "color": "green" }
+      ],
+      "currentTurn": {
+        "username": "alice",
+        "color": "blue",
+        "phase": "move"
+      }
+    }
+  ]
+}
+```
+
+**Example - Finished game:**
+```json
+{
+  "games": [
+    {
+      "code": "DONE",
+      "name": "Completed Game",
+      "userCount": 4,
+      "stage": "finished",
+      "players": [
+        { "username": "alice", "color": "blue" },
+        { "username": "bob", "color": "red" },
+        { "username": "charlie", "color": "green" },
+        { "username": "diana", "color": "white" }
+      ]
+    }
+  ]
+}
+```
+
+**Response Fields:**
+- `code` - Game code
+- `name` - Game name
+- `userCount` - Number of players in the game
+- `stage` - Game stage: "unstarted", "playing", or "finished"
+- `players` - Array of players in the game with their usernames and colors
+- `availableColors` - (Only for unstarted games with space) Array of colors that can still be chosen
+- `currentTurn` - (Only for playing games) Object with:
+  - `username` - Whose turn it is
+  - `color` - That player's color
+  - `phase` - Current turn phase ("shift" or "move")
 
 **Error Responses:**
 - `400 Bad Request` - Missing username parameter
@@ -195,7 +256,7 @@ Retrieves all games that a specific user is part of.
 
 ### Join Game
 
-Adds a user to an existing game by game code.
+Adds a user to an existing game. The game must be in 'unstarted' stage. If no color is specified, the first available color is automatically assigned.
 
 **Endpoint:** `POST /api/games/:code/join`
 
@@ -209,6 +270,18 @@ Adds a user to an existing game by game code.
 }
 ```
 
+Or with optional color specification:
+```json
+{
+  "username": "jane_doe",
+  "color": "red"
+}
+```
+
+**Request Fields:**
+- `username` - Player's username (required)
+- `color` - Player's chosen color (optional). If not provided, first available color is auto-assigned
+
 **Success Response (200 OK):**
 ```json
 {
@@ -216,20 +289,124 @@ Adds a user to an existing game by game code.
 }
 ```
 
+**Auto-Assignment Behavior:**
+- When color is not provided, server assigns colors in this order: red → green → blue → white
+- Players can change their assigned color later using the Update Player Color endpoint
+
 **Error Responses:**
-- `400 Bad Request` - Missing username
+- `400 Bad Request` - Missing required fields or invalid color
   ```json
   { "error": "Username required" }
+  { "error": "Invalid color. Must be red, green, blue, or white" }
   ```
 - `404 Not Found` - Game doesn't exist
   ```json
   { "error": "Game not found" }
   ```
-- `409 Conflict` - User already in game
+- `409 Conflict` - Various conflict scenarios
   ```json
   { "error": "User already in game" }
+  { "error": "Color already taken" }
+  { "error": "Game is full" }
+  { "error": "Cannot join game that has already started" }
   ```
 - `500 Internal Server Error` - Server error
+
+**Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts)
+
+---
+
+### Update Player Color
+
+Updates a player's color choice in an unstarted game. Only valid before the game has started.
+
+**Endpoint:** `PUT /api/games/:code/players/:username`
+
+**URL Parameters:**
+- `code` - The 4-letter game code (e.g., "ABCD")
+- `username` - The username of the player changing their color
+
+**Request Body:**
+```json
+{
+  "color": "green"
+}
+```
+
+**Request Fields:**
+- `color` - New color to switch to (must be one of: "red", "green", "blue", "white")
+
+**Success Response (200 OK):**
+```json
+{
+  "message": "Color updated successfully"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` - Missing or invalid color
+  ```json
+  { "error": "Color required" }
+  { "error": "Invalid color. Must be red, green, blue, or white" }
+  ```
+- `404 Not Found` - Game doesn't exist
+  ```json
+  { "error": "Game not found" }
+  ```
+- `409 Conflict` - Various conflict scenarios
+  ```json
+  { "error": "User is not in this game" }
+  { "error": "Color already taken" }
+  { "error": "Cannot change color after game has started" }
+  ```
+- `500 Internal Server Error` - Server error
+
+**Use Case:**
+Allows players to change their mind about their color choice while waiting for the game to start. Once the game begins, colors are locked in.
+
+**Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts)
+
+---
+
+### Start Game
+
+Starts a game by randomizing player order and setting the game to 'playing' stage. Requires 2-4 players.
+
+**Endpoint:** `POST /api/games/:code/start`
+
+**URL Parameters:**
+- `code` - The 4-letter game code (e.g., "ABCD")
+
+**Request Body:**
+```json
+{}
+```
+(No body needed)
+
+**Success Response (200 OK):**
+```json
+{
+  "message": "Game started successfully"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` - Game cannot be started
+  ```json
+  { "error": "Need at least 2 players to start the game" }
+  { "error": "Game has already started or finished" }
+  ```
+- `404 Not Found` - Game doesn't exist
+  ```json
+  { "error": "Game not found" }
+  ```
+- `500 Internal Server Error` - Server error
+
+**Game State Changes:**
+- Player order is randomized
+- `stage` is set to 'playing'
+- `currentPlayerIndex` is set to 0 (first player in randomized order)
+- `currentPhase` is set to 'shift' (first phase of the turn)
 
 **Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts)
 

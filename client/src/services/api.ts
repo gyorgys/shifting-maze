@@ -1,5 +1,5 @@
 import { User, CreateUserFormData, LoginFormData } from '../types/User';
-import { Game, CreateGameFormData, JoinGameFormData } from '../types/Game';
+import { Game, CreateGameFormData, JoinGameFormData, PlayerColor } from '../types/Game';
 
 // Utility: Hash password with salt using Web Crypto API
 async function hashPassword(password: string, salt: string): Promise<string> {
@@ -159,6 +159,7 @@ export async function joinGame(formData: JoinGameFormData, username: string): Pr
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         username,
+        // No color - server will auto-assign first available
       }),
     });
 
@@ -168,6 +169,43 @@ export async function joinGame(formData: JoinGameFormData, username: string): Pr
     }
   } catch (error) {
     console.error('Join game error:', error);
+    throw error;
+  }
+}
+
+export async function updatePlayerColor(
+  gameCode: string,
+  username: string,
+  color: PlayerColor
+): Promise<void> {
+  try {
+    const response = await fetch(`/api/games/${gameCode}/players/${username}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ color }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Update player color error:', error);
+    throw error;
+  }
+}
+
+export async function getGame(gameCode: string, username: string): Promise<Game> {
+  try {
+    // Re-use listGames and find the specific game
+    const games = await listGames(username);
+    const game = games.find(g => g.code === gameCode);
+    if (!game) {
+      throw new Error('Game not found');
+    }
+    return game;
+  } catch (error) {
+    console.error('Get game error:', error);
     throw error;
   }
 }
