@@ -24,9 +24,10 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   success: boolean;
+  token?: string;  // JWT token for authentication (present when success is true)
   user?: {
     username: string;
     displayName: string;
   };
-  message?: string;
+  message?: string;  // Error message (present when success is false)
 }

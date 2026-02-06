@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { createUser } from '../services/api';
+import { createUser, login } from '../services/api';
 import { User } from '../types/User';
 
 interface CreateUserFormProps {
@@ -49,8 +49,15 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
     setErrors({});
 
     try {
-      const user = await createUser({ username, displayName, password });
-      onSuccess(user);
+      // Create user
+      await createUser({ username, displayName, password });
+      // Automatically log in the user after registration
+      const user = await login({ username, password });
+      if (user) {
+        onSuccess(user);
+      } else {
+        setErrors({ api: 'Registration successful but login failed. Please try logging in.' });
+      }
     } catch (error) {
       setErrors({ api: (error as Error).message });
     } finally {

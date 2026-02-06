@@ -33,7 +33,7 @@ export interface Game {
 
 export interface CreateGameRequest {
   name: string;
-  createdBy: string;
+  // createdBy comes from authenticated user
 }
 
 export interface CreateGameResponse {
@@ -62,12 +62,12 @@ export interface ListGamesResponse {
 }
 
 export interface JoinGameRequest {
-  username: string;
+  // username comes from authenticated user
   color?: PlayerColor;  // Optional - if not provided, first available color is auto-assigned
 }
 
 export interface StartGameRequest {
-  // No body needed - code comes from URL parameter
+  // username comes from authenticated user
 }
 
 export interface UpdatePlayerColorRequest {

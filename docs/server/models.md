@@ -66,18 +66,27 @@ interface LoginRequest {
 
 ### LoginResponse
 
-Response for login authentication.
+Response for login authentication. Includes JWT token when successful.
 
 ```typescript
 interface LoginResponse {
   success: boolean;
+  token?: string;        // JWT token for authentication (present when success is true)
   user?: {
     username: string;
     displayName: string;
   };
-  message?: string;
+  message?: string;      // Error message (present when success is false)
 }
 ```
+
+**Token Usage:**
+- When `success` is `true`, the `token` field contains a JWT token
+- This token should be included in the `Authorization` header for all protected endpoints:
+  ```
+  Authorization: Bearer <token>
+  ```
+- Token expires after 24 hours
 
 ## Game Model
 
@@ -168,14 +177,19 @@ Each player's turn consists of two phases:
 
 ### CreateGameRequest
 
-Request body for creating a new game.
+Request body for creating a new game. The creator's username comes from the authenticated user.
 
 ```typescript
 interface CreateGameRequest {
   name: string;
-  createdBy: string;       // Username of creator
+  // createdBy comes from authenticated user via JWT token
 }
 ```
+
+**Authentication:**
+- Requires valid JWT token in Authorization header
+- The authenticated user becomes the game creator
+- Creator is automatically added as the first player with color 'red'
 
 ### CreateGameResponse
 
@@ -223,15 +237,19 @@ interface ListGamesResponse {
 
 ### JoinGameRequest
 
-Request body for joining a game. Color is optional - if not provided, the first available color is automatically assigned.
+Request body for joining a game. The player's username comes from the authenticated user. Color is optional - if not provided, the first available color is automatically assigned.
 
 ```typescript
 interface JoinGameRequest {
-  username: string;        // Player's username
+  // username comes from authenticated user via JWT token
   color?: PlayerColor;     // Optional color ('red' | 'green' | 'blue' | 'white')
                            // If not provided, first available color is auto-assigned
 }
 ```
+
+**Authentication:**
+- Requires valid JWT token in Authorization header
+- The authenticated user is added to the game
 
 **Validation:**
 - If color is provided:
@@ -239,6 +257,7 @@ interface JoinGameRequest {
   - Must not already be taken by another player
 - Game must be in 'unstarted' stage
 - Game must not be full (max 4 players)
+- User must not already be in the game
 
 **Auto-assignment:**
 - If no color is provided, the server assigns the first available color
@@ -247,22 +266,27 @@ interface JoinGameRequest {
 
 ### StartGameRequest
 
-Request to start a game (no body needed, code comes from URL).
+Request to start a game. The requester's username comes from the authenticated user. Only the game creator can start the game.
 
 ```typescript
 interface StartGameRequest {
-  // No body needed
+  // username comes from authenticated user via JWT token
 }
 ```
 
+**Authentication:**
+- Requires valid JWT token in Authorization header
+- Authenticated user must be the game creator
+
 **Requirements:**
+- Requester must be the game creator (authenticated username must match `createdBy`)
 - Game must have 2-4 players
 - Game must be in 'unstarted' stage
 - Player order will be randomized when game starts
 
 ### UpdatePlayerColorRequest
 
-Request body for updating a player's color in an unstarted game.
+Request body for updating the authenticated player's color in an unstarted game.
 
 ```typescript
 interface UpdatePlayerColorRequest {
@@ -270,11 +294,15 @@ interface UpdatePlayerColorRequest {
 }
 ```
 
+**Authentication:**
+- Requires valid JWT token in Authorization header
+- Authenticated user must be in the game
+
 **Validation:**
 - Color must be one of: 'red', 'green', 'blue', 'white'
 - Color must not be taken by another player
 - Game must be in 'unstarted' stage
-- Player must already be in the game
+- Authenticated user must already be in the game
 
 ## Relationships
 

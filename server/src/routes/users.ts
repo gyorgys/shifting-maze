@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import * as userService from '../services/userService';
 import { CreateUserRequest, LoginRequest } from '../models/User';
+import { generateToken } from '../middleware/auth';
 
 const router = Router();
 
@@ -73,8 +74,11 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 
     if (isValid) {
       const user = await userService.getUserByUsername(data.username);
+      const token = generateToken(user!.username, user!.displayName);
+
       res.status(200).json({
         success: true,
+        token,
         user: {
           username: user!.username,
           displayName: user!.displayName,

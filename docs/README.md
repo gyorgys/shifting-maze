@@ -6,7 +6,8 @@ Comprehensive documentation for the Shifting Maze multi-game hosting service.
 
 Shifting Maze is a web application that allows users to create accounts, authenticate, create games, and join games using unique codes. The system features:
 
-- User authentication with secure password hashing
+- JWT-based authentication with secure password hashing
+- Token-protected game endpoints
 - Game creation with unique 4-letter codes
 - Game joining by code
 - File-based JSON persistence
@@ -93,7 +94,9 @@ Client runs on http://localhost:5173
 
 - **Registration:** Users create accounts with username, display name, and password
 - **Password Security:** Client-side SHA-256 hashing with per-user salts
-- **Session Management:** localStorage-based persistence
+- **JWT Tokens:** Server issues 24-hour JWT tokens upon successful login
+- **Protected Endpoints:** All game operations require valid JWT token
+- **Token Storage:** Client stores JWT in localStorage
 - **Validation:** Strict username and password requirements
 
 **Flow:**

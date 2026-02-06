@@ -1,22 +1,23 @@
 import { Router, Request, Response } from 'express';
 import * as gameService from '../services/gameService';
-import { CreateGameRequest, JoinGameRequest, StartGameRequest, UpdatePlayerColorRequest } from '../models/Game';
+import { CreateGameRequest, JoinGameRequest, UpdatePlayerColorRequest } from '../models/Game';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
-// POST /api/games - Create new game
-router.post('/', async (req: Request, res: Response): Promise<void> => {
+// POST /api/games - Create new game (requires authentication)
+router.post('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const data: CreateGameRequest = req.body;
 
     // Validate request body
-    if (!data.name || !data.createdBy) {
-      res.status(400).json({ error: 'Missing required fields' });
+    if (!data.name) {
+      res.status(400).json({ error: 'Game name required' });
       return;
     }
 
-    // Create game
-    const game = await gameService.createGame(data);
+    // Create game with authenticated user as creator
+    const game = await gameService.createGame(data.name, req.user!.username);
 
     // Return game code and name
     res.status(201).json({
@@ -35,18 +36,11 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// GET /api/games?username=xxx - List games for user
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+// GET /api/games - List games for authenticated user
+router.get('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { username } = req.query;
-
-    if (!username || typeof username !== 'string') {
-      res.status(400).json({ error: 'Username query parameter required' });
-      return;
-    }
-
-    // Get games for user
-    const games = await gameService.listGamesByUser(username);
+    // Get games for authenticated user
+    const games = await gameService.listGamesByUser(req.user!.username);
 
     // Format response with enhanced game state information
     res.status(200).json({
@@ -54,6 +48,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         const baseInfo = {
           code: game.code,
           name: game.name,
+          createdBy: game.createdBy,  // Include creator username
           userCount: game.players.length,
           stage: game.stage,
           players: game.players,  // Always include players with their colors
@@ -90,16 +85,10 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 // POST /api/games/:code/join - Join game by code (auto-assigns color if not provided)
-router.post('/:code/join', async (req: Request, res: Response): Promise<void> => {
+router.post('/:code/join', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { code } = req.params;
     const data: JoinGameRequest = req.body;
-
-    // Validate request body
-    if (!data.username) {
-      res.status(400).json({ error: 'Username required' });
-      return;
-    }
 
     // Validate color if provided
     if (data.color) {
@@ -110,8 +99,8 @@ router.post('/:code/join', async (req: Request, res: Response): Promise<void> =>
       }
     }
 
-    // Add user to game (color will be auto-assigned if not provided)
-    await gameService.addUserToGame(code, data.username, data.color);
+    // Add authenticated user to game (color will be auto-assigned if not provided)
+    await gameService.addUserToGame(code, req.user!.username, data.color);
 
     res.status(200).json({ message: 'Successfully joined game' });
   } catch (error) {
@@ -132,12 +121,12 @@ router.post('/:code/join', async (req: Request, res: Response): Promise<void> =>
 });
 
 // POST /api/games/:code/start - Start the game
-router.post('/:code/start', async (req: Request, res: Response): Promise<void> => {
+router.post('/:code/start', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { code } = req.params;
 
-    // Start the game
-    await gameService.startGame(code);
+    // Start the game with authenticated user
+    await gameService.startGame(code, req.user!.username);
 
     res.status(200).json({ message: 'Game started successfully' });
   } catch (error) {
@@ -147,7 +136,8 @@ router.post('/:code/start', async (req: Request, res: Response): Promise<void> =
     if (errorMessage.includes('not found')) {
       res.status(404).json({ error: errorMessage });
     } else if (errorMessage.includes('already started') ||
-               errorMessage.includes('Need at least')) {
+               errorMessage.includes('Need at least') ||
+               errorMessage.includes('Only the game creator')) {
       res.status(400).json({ error: errorMessage });
     } else {
       res.status(500).json({ error: 'Internal server error' });
@@ -155,10 +145,10 @@ router.post('/:code/start', async (req: Request, res: Response): Promise<void> =
   }
 });
 
-// PUT /api/games/:code/players/:username - Update player's color
-router.put('/:code/players/:username', async (req: Request, res: Response): Promise<void> => {
+// PUT /api/games/:code/players/color - Update authenticated player's color
+router.put('/:code/players/color', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { code, username } = req.params;
+    const { code } = req.params;
     const data: UpdatePlayerColorRequest = req.body;
 
     // Validate request body
@@ -174,8 +164,8 @@ router.put('/:code/players/:username', async (req: Request, res: Response): Prom
       return;
     }
 
-    // Update player's color
-    await gameService.updatePlayerColor(code, username, data.color);
+    // Update authenticated player's color
+    await gameService.updatePlayerColor(code, req.user!.username, data.color);
 
     res.status(200).json({ message: 'Color updated successfully' });
   } catch (error) {

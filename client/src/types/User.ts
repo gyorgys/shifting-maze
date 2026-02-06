@@ -1,6 +1,7 @@
 export interface User {
   username: string;
   displayName: string;
+  token: string;  // JWT token for authentication
 }
 
 export interface CreateUserFormData {

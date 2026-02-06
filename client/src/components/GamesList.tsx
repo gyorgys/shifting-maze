@@ -1,23 +1,25 @@
 import { useState, useEffect } from 'react';
-import { listGames, updatePlayerColor, getGame } from '../services/api';
+import { listGames, updatePlayerColor, getGame, startGame } from '../services/api';
 import { Game, PlayerColor } from '../types/Game';
+import { User } from '../types/User';
 
 interface GamesListProps {
-  username: string;
+  user: User;
   refresh: number;
 }
 
-export function GamesList({ username, refresh }: GamesListProps) {
+export function GamesList({ user, refresh }: GamesListProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingColor, setUpdatingColor] = useState<string | null>(null);
+  const [startingGame, setStartingGame] = useState<string | null>(null);
 
   const fetchGames = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await listGames(username);
+      const data = await listGames(user.token);
       setGames(data);
     } catch (error) {
       setError((error as Error).message);
@@ -29,7 +31,7 @@ export function GamesList({ username, refresh }: GamesListProps) {
   const handleColorChange = async (gameCode: string, newColor: PlayerColor) => {
     setUpdatingColor(gameCode);
     try {
-      await updatePlayerColor(gameCode, username, newColor);
+      await updatePlayerColor(gameCode, user.token, newColor);
       // Refresh games list to show updated color
       await fetchGames();
     } catch (error) {
@@ -42,7 +44,7 @@ export function GamesList({ username, refresh }: GamesListProps) {
   const handleDropdownFocus = async (gameCode: string) => {
     // Refresh game data when dropdown is opened to get latest available colors
     try {
-      const updatedGame = await getGame(gameCode, username);
+      const updatedGame = await getGame(gameCode, user.token);
       setGames(prevGames =>
         prevGames.map(g => g.code === gameCode ? updatedGame : g)
       );
@@ -51,14 +53,33 @@ export function GamesList({ username, refresh }: GamesListProps) {
     }
   };
 
+  const handleStartGame = async (gameCode: string) => {
+    setStartingGame(gameCode);
+    try {
+      await startGame(gameCode, user.token);
+      // Refresh games list to show updated game state
+      await fetchGames();
+    } catch (error) {
+      alert(`Failed to start game: ${(error as Error).message}`);
+    } finally {
+      setStartingGame(null);
+    }
+  };
+
   const getCurrentPlayerColor = (game: Game): PlayerColor | null => {
-    const player = game.players.find(p => p.username === username);
+    const player = game.players.find(p => p.username === user.username);
     return player ? player.color : null;
+  };
+
+  const canStartGame = (game: Game): boolean => {
+    return game.createdBy === user.username &&
+           game.stage === 'unstarted' &&
+           game.players.length >= 2;
   };
 
   useEffect(() => {
     fetchGames();
-  }, [username, refresh]);
+  }, [user.username, refresh]);
 
   if (loading) {
     return <div style={{ padding: '20px' }}>Loading games...</div>;
@@ -186,6 +207,33 @@ export function GamesList({ username, refresh }: GamesListProps) {
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {/* Show Start Game button for creator of unstarted games with 2+ players */}
+              {canStartGame(game) && (
+                <div style={{ marginTop: '15px' }}>
+                  <button
+                    onClick={() => handleStartGame(game.code)}
+                    disabled={startingGame === game.code}
+                    style={{
+                      padding: '10px 20px',
+                      fontSize: '14px',
+                      backgroundColor: startingGame === game.code ? '#ccc' : '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: startingGame === game.code ? 'not-allowed' : 'pointer',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {startingGame === game.code ? 'Starting...' : 'Start Game'}
+                  </button>
+                  {game.players.length < 4 && (
+                    <span style={{ marginLeft: '10px', fontSize: '14px', color: '#6c757d' }}>
+                      (Waiting for more players is optional)
+                    </span>
+                  )}
                 </div>
               )}
             </li>

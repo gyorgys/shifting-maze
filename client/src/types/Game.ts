@@ -10,6 +10,7 @@ export interface Player {
 export interface Game {
   code: string;
   name: string;
+  createdBy: string;  // Username of the game creator
   userCount: number;
   stage: GameStage;
   players: Player[];

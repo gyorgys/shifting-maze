@@ -21,7 +21,7 @@ function generateSalt(): string {
 }
 
 // Users API
-export async function createUser(formData: CreateUserFormData): Promise<User> {
+export async function createUser(formData: CreateUserFormData): Promise<{ username: string; displayName: string }> {
   try {
     const salt = generateSalt();
     const passwordHash = await hashPassword(formData.password, salt);
@@ -101,7 +101,14 @@ export async function login(formData: LoginFormData): Promise<User | null> {
     }
 
     const data = await response.json();
-    return data.success ? data.user : null;
+    if (data.success) {
+      return {
+        username: data.user.username,
+        displayName: data.user.displayName,
+        token: data.token,
+      };
+    }
+    return null;
   } catch (error) {
     console.error('Login error:', error);
     throw error;
@@ -111,15 +118,17 @@ export async function login(formData: LoginFormData): Promise<User | null> {
 // Games API
 export async function createGame(
   formData: CreateGameFormData,
-  username: string
+  token: string
 ): Promise<{ code: string; name: string }> {
   try {
     const response = await fetch('/api/games', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify({
         name: formData.name,
-        createdBy: username,
       }),
     });
 
@@ -135,9 +144,13 @@ export async function createGame(
   }
 }
 
-export async function listGames(username: string): Promise<Game[]> {
+export async function listGames(token: string): Promise<Game[]> {
   try {
-    const response = await fetch(`/api/games?username=${encodeURIComponent(username)}`);
+    const response = await fetch('/api/games', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -152,13 +165,16 @@ export async function listGames(username: string): Promise<Game[]> {
   }
 }
 
-export async function joinGame(formData: JoinGameFormData, username: string): Promise<void> {
+export async function joinGame(formData: JoinGameFormData, token: string): Promise<void> {
   try {
     const response = await fetch(`/api/games/${formData.code}/join`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify({
-        username,
+        // No fields needed - username comes from JWT
         // No color - server will auto-assign first available
       }),
     });
@@ -175,13 +191,16 @@ export async function joinGame(formData: JoinGameFormData, username: string): Pr
 
 export async function updatePlayerColor(
   gameCode: string,
-  username: string,
+  token: string,
   color: PlayerColor
 ): Promise<void> {
   try {
-    const response = await fetch(`/api/games/${gameCode}/players/${username}`, {
+    const response = await fetch(`/api/games/${gameCode}/players/color`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify({ color }),
     });
 
@@ -195,10 +214,10 @@ export async function updatePlayerColor(
   }
 }
 
-export async function getGame(gameCode: string, username: string): Promise<Game> {
+export async function getGame(gameCode: string, token: string): Promise<Game> {
   try {
     // Re-use listGames and find the specific game
-    const games = await listGames(username);
+    const games = await listGames(token);
     const game = games.find(g => g.code === gameCode);
     if (!game) {
       throw new Error('Game not found');
@@ -206,6 +225,27 @@ export async function getGame(gameCode: string, username: string): Promise<Game>
     return game;
   } catch (error) {
     console.error('Get game error:', error);
+    throw error;
+  }
+}
+
+export async function startGame(gameCode: string, token: string): Promise<void> {
+  try {
+    const response = await fetch(`/api/games/${gameCode}/start`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Start game error:', error);
     throw error;
   }
 }

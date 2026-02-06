@@ -1,4 +1,4 @@
-import { Game, CreateGameRequest, PlayerColor } from '../models/Game';
+import { Game, PlayerColor } from '../models/Game';
 import * as storage from '../utils/fileStorage';
 import { isValidGameName, generateGameCode } from '../utils/validation';
 
@@ -16,9 +16,9 @@ async function generateUniqueGameCode(): Promise<string> {
   throw new Error('Unable to generate unique game code after 100 attempts');
 }
 
-export async function createGame(data: CreateGameRequest): Promise<Game> {
+export async function createGame(name: string, createdBy: string): Promise<Game> {
   // Validate game name
-  if (!isValidGameName(data.name)) {
+  if (!isValidGameName(name)) {
     throw new Error('Invalid game name. Must be 1-100 characters.');
   }
 
@@ -28,13 +28,13 @@ export async function createGame(data: CreateGameRequest): Promise<Game> {
   // Create game object in unstarted state
   const game: Game = {
     code,
-    name: data.name,
+    name,
     createdAt: new Date().toISOString(),
-    createdBy: data.createdBy,
+    createdBy,
     stage: 'unstarted',
     players: [
       // Automatically join the creator with the first available color (red)
-      { username: data.createdBy, color: 'red' }
+      { username: createdBy, color: 'red' }
     ],
     maxPlayers: 4,
   };
@@ -120,10 +120,15 @@ export async function addUserToGame(code: string, username: string, color?: Play
 }
 
 // Start the game - randomizes player order and sets game to playing stage
-export async function startGame(code: string): Promise<void> {
+export async function startGame(code: string, username: string): Promise<void> {
   const game = await getGameByCode(code);
   if (!game) {
     throw new Error('Game not found');
+  }
+
+  // Check if the user is the game creator
+  if (game.createdBy !== username) {
+    throw new Error('Only the game creator can start the game');
   }
 
   // Check if game is in correct stage

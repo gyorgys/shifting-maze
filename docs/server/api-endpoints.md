@@ -8,6 +8,32 @@ All endpoints are prefixed with `/api`
 
 - Development: `http://localhost:3001/api`
 
+## Authentication
+
+Most endpoints require authentication using JWT (JSON Web Tokens).
+
+**How to authenticate:**
+1. Login via `POST /api/users/login` to receive a JWT token
+2. Include the token in the `Authorization` header for protected endpoints:
+   ```
+   Authorization: Bearer <your-jwt-token>
+   ```
+
+**Protected endpoints** (require authentication):
+- All game endpoints except public user endpoints
+
+**Token expiration:** 24 hours
+
+**Error responses for protected endpoints:**
+- `401 Unauthorized` - No token provided
+  ```json
+  { "error": "Authentication required" }
+  ```
+- `403 Forbidden` - Invalid or expired token
+  ```json
+  { "error": "Invalid or expired token" }
+  ```
+
 ## User Endpoints
 
 ### Create User
@@ -79,7 +105,7 @@ Retrieves the salt for a specific user (needed for client-side password hashing)
 
 ### Login
 
-Authenticates a user with username and password hash.
+Authenticates a user with username and password hash. Returns a JWT token for accessing protected endpoints.
 
 **Endpoint:** `POST /api/users/login`
 
@@ -97,6 +123,7 @@ When credentials are valid:
 ```json
 {
   "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "username": "john_doe",
     "displayName": "John Doe"
@@ -112,6 +139,12 @@ When credentials are invalid:
 }
 ```
 
+**Token Usage:**
+Use the returned token in the `Authorization` header for all protected endpoints:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
 **Error Responses:**
 - `400 Bad Request` - Missing required fields
 - `500 Internal Server Error` - Server error
@@ -124,15 +157,21 @@ When credentials are invalid:
 
 ### Create Game
 
-Creates a new game with a randomly generated 4-letter code.
+Creates a new game with a randomly generated 4-letter code. The authenticated user becomes the creator and is automatically added as the first player.
 
 **Endpoint:** `POST /api/games`
+
+**Authentication:** Required
+
+**Headers:**
+```
+Authorization: Bearer <your-jwt-token>
+```
 
 **Request Body:**
 ```json
 {
-  "name": "My Awesome Game",
-  "createdBy": "john_doe"
+  "name": "My Awesome Game"
 }
 ```
 
@@ -147,8 +186,11 @@ Creates a new game with a randomly generated 4-letter code.
 **Error Responses:**
 - `400 Bad Request` - Missing required fields or invalid game name
   ```json
+  { "error": "Game name required" }
   { "error": "Invalid game name. Must be 1-100 characters." }
   ```
+- `401 Unauthorized` - No authentication token provided
+- `403 Forbidden` - Invalid or expired token
 - `500 Internal Server Error` - Server error or unable to generate unique code
 
 **Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts)
@@ -157,12 +199,16 @@ Creates a new game with a randomly generated 4-letter code.
 
 ### List Games
 
-Retrieves all games that a specific user is part of, with detailed state information including available colors for joinable games and current turn info for games in progress.
+Retrieves all games that the authenticated user is part of, with detailed state information including available colors for joinable games and current turn info for games in progress.
 
-**Endpoint:** `GET /api/games?username={username}`
+**Endpoint:** `GET /api/games`
 
-**Query Parameters:**
-- `username` - The username to filter games by
+**Authentication:** Required
+
+**Headers:**
+```
+Authorization: Bearer <your-jwt-token>
+```
 
 **Success Response (200 OK):**
 
@@ -244,10 +290,8 @@ The response includes different fields based on the game's stage:
   - `phase` - Current turn phase ("shift" or "move")
 
 **Error Responses:**
-- `400 Bad Request` - Missing username parameter
-  ```json
-  { "error": "Username query parameter required" }
-  ```
+- `401 Unauthorized` - No authentication token provided
+- `403 Forbidden` - Invalid or expired token
 - `500 Internal Server Error` - Server error
 
 **Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts)
@@ -256,30 +300,33 @@ The response includes different fields based on the game's stage:
 
 ### Join Game
 
-Adds a user to an existing game. The game must be in 'unstarted' stage. If no color is specified, the first available color is automatically assigned.
+Adds the authenticated user to an existing game. The game must be in 'unstarted' stage. If no color is specified, the first available color is automatically assigned.
 
 **Endpoint:** `POST /api/games/:code/join`
+
+**Authentication:** Required
+
+**Headers:**
+```
+Authorization: Bearer <your-jwt-token>
+```
 
 **URL Parameters:**
 - `code` - The 4-letter game code (e.g., "ABCD")
 
 **Request Body:**
 ```json
-{
-  "username": "jane_doe"
-}
+{}
 ```
 
 Or with optional color specification:
 ```json
 {
-  "username": "jane_doe",
   "color": "red"
 }
 ```
 
 **Request Fields:**
-- `username` - Player's username (required)
 - `color` - Player's chosen color (optional). If not provided, first available color is auto-assigned
 
 **Success Response (200 OK):**
@@ -294,11 +341,12 @@ Or with optional color specification:
 - Players can change their assigned color later using the Update Player Color endpoint
 
 **Error Responses:**
-- `400 Bad Request` - Missing required fields or invalid color
+- `400 Bad Request` - Invalid color
   ```json
-  { "error": "Username required" }
   { "error": "Invalid color. Must be red, green, blue, or white" }
   ```
+- `401 Unauthorized` - No authentication token provided
+- `403 Forbidden` - Invalid or expired token
 - `404 Not Found` - Game doesn't exist
   ```json
   { "error": "Game not found" }
@@ -318,13 +366,19 @@ Or with optional color specification:
 
 ### Update Player Color
 
-Updates a player's color choice in an unstarted game. Only valid before the game has started.
+Updates the authenticated player's color choice in an unstarted game. Only valid before the game has started.
 
-**Endpoint:** `PUT /api/games/:code/players/:username`
+**Endpoint:** `PUT /api/games/:code/players/color`
+
+**Authentication:** Required
+
+**Headers:**
+```
+Authorization: Bearer <your-jwt-token>
+```
 
 **URL Parameters:**
 - `code` - The 4-letter game code (e.g., "ABCD")
-- `username` - The username of the player changing their color
 
 **Request Body:**
 ```json
@@ -349,6 +403,8 @@ Updates a player's color choice in an unstarted game. Only valid before the game
   { "error": "Color required" }
   { "error": "Invalid color. Must be red, green, blue, or white" }
   ```
+- `401 Unauthorized` - No authentication token provided
+- `403 Forbidden` - Invalid or expired token
 - `404 Not Found` - Game doesn't exist
   ```json
   { "error": "Game not found" }
@@ -370,9 +426,16 @@ Allows players to change their mind about their color choice while waiting for t
 
 ### Start Game
 
-Starts a game by randomizing player order and setting the game to 'playing' stage. Requires 2-4 players.
+Starts a game by randomizing player order and setting the game to 'playing' stage. Only the game creator can start the game, and it requires 2-4 players.
 
 **Endpoint:** `POST /api/games/:code/start`
+
+**Authentication:** Required
+
+**Headers:**
+```
+Authorization: Bearer <your-jwt-token>
+```
 
 **URL Parameters:**
 - `code` - The 4-letter game code (e.g., "ABCD")
@@ -381,7 +444,7 @@ Starts a game by randomizing player order and setting the game to 'playing' stag
 ```json
 {}
 ```
-(No body needed)
+(No body needed - authenticated user must be the game creator)
 
 **Success Response (200 OK):**
 ```json
@@ -393,14 +456,22 @@ Starts a game by randomizing player order and setting the game to 'playing' stag
 **Error Responses:**
 - `400 Bad Request` - Game cannot be started
   ```json
+  { "error": "Only the game creator can start the game" }
   { "error": "Need at least 2 players to start the game" }
   { "error": "Game has already started or finished" }
   ```
+- `401 Unauthorized` - No authentication token provided
+- `403 Forbidden` - Invalid or expired token
 - `404 Not Found` - Game doesn't exist
   ```json
   { "error": "Game not found" }
   ```
 - `500 Internal Server Error` - Server error
+
+**Validation:**
+- Authenticated user must be the game creator (matching `createdBy` field)
+- Game must be in 'unstarted' stage
+- Game must have at least 2 players
 
 **Game State Changes:**
 - Player order is randomized
@@ -414,7 +485,7 @@ Starts a game by randomizing player order and setting the game to 'playing' stag
 
 ## Authentication Flow
 
-The system uses client-side password hashing for security:
+The system uses client-side password hashing and JWT tokens for security:
 
 1. **Registration:**
    - Client generates random 32-byte salt
@@ -426,7 +497,13 @@ The system uses client-side password hashing for security:
    - Client requests salt: `GET /api/users/:username/salt`
    - Client hashes password with received salt: `SHA-256(password + salt)`
    - Client sends `LoginRequest` with username and hash
-   - Server compares hash with stored hash
+   - Server validates credentials and returns JWT token
+   - Client stores token for subsequent requests
+
+3. **Accessing Protected Endpoints:**
+   - Client includes JWT token in Authorization header: `Bearer <token>`
+   - Server validates token and extracts user information
+   - Server processes request with authenticated user context
 
 ## Error Handling
 

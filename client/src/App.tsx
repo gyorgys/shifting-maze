@@ -99,7 +99,7 @@ function App() {
 
       <h2>Create New Game</h2>
       <CreateGameForm
-        username={user.username}
+        user={user}
         onSuccess={(code, name) => {
           alert(`Game created! Code: ${code}\nName: ${name}`);
           setRefreshGames(prev => prev + 1);
@@ -110,7 +110,7 @@ function App() {
 
       <h2>Join Game</h2>
       <JoinGameForm
-        username={user.username}
+        user={user}
         onSuccess={() => {
           setRefreshGames(prev => prev + 1);
         }}
@@ -118,7 +118,7 @@ function App() {
 
       <hr style={{ margin: '20px 0' }} />
 
-      <GamesList username={user.username} refresh={refreshGames} />
+      <GamesList user={user} refresh={refreshGames} />
     </div>
   );
 }

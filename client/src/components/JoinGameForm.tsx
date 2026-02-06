@@ -1,12 +1,13 @@
 import { useState, FormEvent } from 'react';
 import { joinGame } from '../services/api';
+import { User } from '../types/User';
 
 interface JoinGameFormProps {
-  username: string;
+  user: User;
   onSuccess: () => void;
 }
 
-export function JoinGameForm({ username, onSuccess }: JoinGameFormProps) {
+export function JoinGameForm({ user, onSuccess }: JoinGameFormProps) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -26,7 +27,7 @@ export function JoinGameForm({ username, onSuccess }: JoinGameFormProps) {
     setSuccess('');
 
     try {
-      await joinGame({ code: upperCode }, username);
+      await joinGame({ code: upperCode }, user.token);
       setSuccess(`Successfully joined game ${upperCode}!`);
       setCode('');
       onSuccess();

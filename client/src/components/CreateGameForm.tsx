@@ -1,12 +1,13 @@
 import { useState, FormEvent } from 'react';
 import { createGame } from '../services/api';
+import { User } from '../types/User';
 
 interface CreateGameFormProps {
-  username: string;
+  user: User;
   onSuccess: (code: string, name: string) => void;
 }
 
-export function CreateGameForm({ username, onSuccess }: CreateGameFormProps) {
+export function CreateGameForm({ user, onSuccess }: CreateGameFormProps) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -23,7 +24,7 @@ export function CreateGameForm({ username, onSuccess }: CreateGameFormProps) {
     setError('');
 
     try {
-      const game = await createGame({ name }, username);
+      const game = await createGame({ name }, user.token);
       setName('');
       onSuccess(game.code, game.name);
     } catch (error) {
