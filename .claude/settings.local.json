@@ -4,7 +4,6 @@
       "Bash(git init:*)",
       "Bash(git add:*)",
       "Bash(npm install)",
-      "Bash(npm run dev:*)",
       "Bash(gh codespace ports:*)",
       "Bash(env:*)",
       "Bash(npm install:*)",
@@ -14,7 +13,13 @@
       "Bash(npx tsx:*)",
       "Bash(git commit:*)",
       "Bash(git restore:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(git commit:*)",
+      "Bash(gh repo create:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(npm start)",
+      "Bash(npm run dev:*)"
     ]
   }
 }
