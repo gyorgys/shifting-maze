@@ -109,31 +109,144 @@ const user = await loginAPI(formData.username, passwordHash);
 
 **File:** [client/src/types/Game.ts](../../client/src/types/Game.ts)
 
+### Type Aliases
+
+Type-safe aliases to prevent mixing up similar numeric/array types:
+
+```typescript
+type PlayerColor = 'red' | 'green' | 'blue' | 'white';
+type GameStage = 'unstarted' | 'playing' | 'finished';
+type TurnPhase = 'shift' | 'move';
+type Position = [number, number];  // [row, col]
+type Tile = number;                // Bitmask 0-15
+type TokenId = number;             // 0-20
+```
+
+**Why Type Aliases:**
+- `Position`: Prevents mixing up coordinates with other number arrays
+- `Tile`: Distinguishes tile bitmasks from other numbers
+- `TokenId`: Distinguishes token IDs from other numbers
+- Provides better autocomplete and error messages
+
+---
+
 ### Game
 
-Represents a game in the client application.
+Represents a game in the client application with complete state information.
 
 ```typescript
 interface Game {
-  code: string;        // 4-letter game code (e.g., "ABCD")
-  name: string;        // Game name
-  userCount: number;   // Number of players in the game
+  code: string;
+  name: string;
+  createdBy: string;      // Username of game creator
+  userCount: number;
+  stage: GameStage;       // 'unstarted' | 'playing' | 'finished'
+  players: Player[];
+  availableColors?: PlayerColor[];  // Only for unstarted games
+  currentTurn?: {
+    username: string;
+    color: PlayerColor;
+    phase: TurnPhase;
+  };
+
+  // Board state (only present when stage is 'playing' or 'finished')
+  board?: Tile[][];                           // 7x7 matrix of tiles
+  tileInPlay?: Tile;                          // Tile not on board
+  playerPositions?: { [color: string]: Position };
+  tokenPositions?: { [tokenId: string]: Position };
+  collectedTokens?: { [color: string]: TokenId[] };
+}
+```
+
+**Field Availability by Stage:**
+
+| Field | Unstarted | Playing | Finished |
+|-------|-----------|---------|----------|
+| `code`, `name`, `createdBy`, `userCount`, `stage`, `players` | ✓ | ✓ | ✓ |
+| `availableColors` | ✓ (if not full) | ✗ | ✗ |
+| `currentTurn` | ✗ | ✓ | ✗ |
+| `board`, `tileInPlay`, `playerPositions`, `tokenPositions`, `collectedTokens` | ✗ | ✓ | ✓ |
+
+**Usage:**
+- Displayed in GamesList component (summary fields)
+- Displayed in GamePage component (full details including board)
+- Received from `listGames` API function (summary only)
+- Received from `getGameDetails` API function (full details)
+
+**Example - Unstarted Game:**
+```typescript
+const game: Game = {
+  code: "ABCD",
+  name: "Waiting Room",
+  createdBy: "alice",
+  userCount: 2,
+  stage: "unstarted",
+  players: [
+    { username: "alice", color: "red" },
+    { username: "bob", color: "blue" }
+  ],
+  availableColors: ["green", "white"]
+};
+```
+
+**Example - Playing Game:**
+```typescript
+const game: Game = {
+  code: "WXYZ",
+  name: "Active Game",
+  createdBy: "alice",
+  userCount: 3,
+  stage: "playing",
+  players: [
+    { username: "alice", color: "blue" },
+    { username: "bob", color: "red" },
+    { username: "charlie", color: "green" }
+  ],
+  currentTurn: {
+    username: "alice",
+    color: "blue",
+    phase: "move"
+  },
+  board: [
+    [10, 3, 11, 3, 11, 3, 9],
+    // ... 7x7 matrix
+  ],
+  tileInPlay: 10,
+  playerPositions: {
+    "blue": [2, 2],
+    "red": [2, 4],
+    "green": [4, 2]
+  },
+  tokenPositions: {
+    "0": [1, 1],
+    "1": [1, 3],
+    // ... all 21 tokens
+  },
+  collectedTokens: {
+    "blue": [0, 5],
+    "red": [1],
+    "green": []
+  }
+};
+```
+
+---
+
+### Player
+
+Represents a player in a game.
+
+```typescript
+interface Player {
+  username: string;
+  color: PlayerColor;
 }
 ```
 
 **Usage:**
-- Displayed in GamesList component
-- Received from `listGames` API function
-- Simplified version of server's Game model (doesn't include full user list)
-
-**Example:**
-```typescript
-const game: Game = {
-  code: "ABCD",
-  name: "My Awesome Game",
-  userCount: 3
-};
-```
+- Part of Game interface
+- Displayed in player lists
+- Color is used for visual indicators and board markers
 
 ---
 
@@ -209,16 +322,30 @@ function login(formData: LoginFormData): Promise<User | null>
 // Game API
 function createGame(
   formData: CreateGameFormData,
-  username: string
+  token: string
 ): Promise<{ code: string; name: string }>
 
-function listGames(username: string): Promise<Game[]>
+function listGames(token: string): Promise<Game[]>
 
-function joinGame(
-  formData: JoinGameFormData,
-  username: string
+function getGame(gameCode: string, token: string): Promise<Game>
+
+function getGameDetails(gameCode: string, token: string): Promise<Game>
+
+function joinGame(formData: JoinGameFormData, token: string): Promise<void>
+
+function updatePlayerColor(
+  gameCode: string,
+  token: string,
+  color: PlayerColor
 ): Promise<void>
+
+function startGame(gameCode: string, token: string): Promise<void>
 ```
+
+**Notes:**
+- All game endpoints require JWT `token` for authentication
+- `getGame()` returns summary data (uses listGames internally)
+- `getGameDetails()` returns full game state including board (direct API call)
 
 ---
 

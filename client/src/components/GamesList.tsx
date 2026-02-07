@@ -6,9 +6,10 @@ import { User } from '../types/User';
 interface GamesListProps {
   user: User;
   refresh: number;
+  onViewGame?: (gameCode: string) => void;
 }
 
-export function GamesList({ user, refresh }: GamesListProps) {
+export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,10 +72,12 @@ export function GamesList({ user, refresh }: GamesListProps) {
     return player ? player.color : null;
   };
 
-  const canStartGame = (game: Game): boolean => {
-    return game.createdBy === user.username &&
-           game.stage === 'unstarted' &&
-           game.players.length >= 2;
+  const isGameCreator = (game: Game): boolean => {
+    return game.createdBy === user.username && game.stage === 'unstarted';
+  };
+
+  const hasEnoughPlayers = (game: Game): boolean => {
+    return game.players.length >= 2;
   };
 
   useEffect(() => {
@@ -210,30 +213,55 @@ export function GamesList({ user, refresh }: GamesListProps) {
                 </div>
               )}
 
-              {/* Show Start Game button for creator of unstarted games with 2+ players */}
-              {canStartGame(game) && (
+              {/* Show Start Game button for creator of unstarted games */}
+              {isGameCreator(game) && (
                 <div style={{ marginTop: '15px' }}>
                   <button
                     onClick={() => handleStartGame(game.code)}
-                    disabled={startingGame === game.code}
+                    disabled={startingGame === game.code || !hasEnoughPlayers(game)}
                     style={{
                       padding: '10px 20px',
                       fontSize: '14px',
-                      backgroundColor: startingGame === game.code ? '#ccc' : '#28a745',
+                      backgroundColor: (startingGame === game.code || !hasEnoughPlayers(game)) ? '#ccc' : '#28a745',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
-                      cursor: startingGame === game.code ? 'not-allowed' : 'pointer',
+                      cursor: (startingGame === game.code || !hasEnoughPlayers(game)) ? 'not-allowed' : 'pointer',
                       fontWeight: 'bold',
                     }}
                   >
                     {startingGame === game.code ? 'Starting...' : 'Start Game'}
                   </button>
-                  {game.players.length < 4 && (
+                  {!hasEnoughPlayers(game) ? (
+                    <span style={{ marginLeft: '10px', fontSize: '14px', color: '#dc3545' }}>
+                      Need at least 2 players to start
+                    </span>
+                  ) : game.players.length < 4 && (
                     <span style={{ marginLeft: '10px', fontSize: '14px', color: '#6c757d' }}>
                       (Waiting for more players is optional)
                     </span>
                   )}
+                </div>
+              )}
+
+              {/* Show View Game button for playing/finished games */}
+              {game.stage !== 'unstarted' && onViewGame && (
+                <div style={{ marginTop: '15px' }}>
+                  <button
+                    onClick={() => onViewGame(game.code)}
+                    style={{
+                      padding: '10px 20px',
+                      fontSize: '14px',
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    View Game
+                  </button>
                 </div>
               )}
             </li>

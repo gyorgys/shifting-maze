@@ -5,11 +5,28 @@ import { LoginForm } from './components/LoginForm';
 import { GamesList } from './components/GamesList';
 import { CreateGameForm } from './components/CreateGameForm';
 import { JoinGameForm } from './components/JoinGameForm';
+import { GamePage } from './components/GamePage';
+
+type AuthView = 'login' | 'create';
+type MainView = 'games' | 'game-detail';
 
 function App() {
   const { user, loading, login, logout } = useAuth();
-  const [view, setView] = useState<'login' | 'create'>('login');
+  const [authView, setAuthView] = useState<AuthView>('login');
+  const [mainView, setMainView] = useState<MainView>('games');
+  const [selectedGameCode, setSelectedGameCode] = useState<string | null>(null);
   const [refreshGames, setRefreshGames] = useState(0);
+
+  // Navigation helpers
+  const navigateToGame = (gameCode: string) => {
+    setSelectedGameCode(gameCode);
+    setMainView('game-detail');
+  };
+
+  const navigateToGames = () => {
+    setSelectedGameCode(null);
+    setMainView('games');
+  };
 
   if (loading) {
     return (
@@ -26,14 +43,14 @@ function App() {
       <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
         <h1>Shifting Maze</h1>
 
-        {view === 'login' ? (
+        {authView === 'login' ? (
           <>
             <h2>Login</h2>
             <LoginForm onSuccess={login} />
             <p style={{ marginTop: '20px' }}>
               Don't have an account?{' '}
               <button
-                onClick={() => setView('create')}
+                onClick={() => setAuthView('create')}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -54,7 +71,7 @@ function App() {
             <p style={{ marginTop: '20px' }}>
               Already have an account?{' '}
               <button
-                onClick={() => setView('login')}
+                onClick={() => setAuthView('login')}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -73,7 +90,7 @@ function App() {
     );
   }
 
-  // Authenticated - show games
+  // Authenticated - show games list or game detail
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -97,28 +114,44 @@ function App() {
 
       <hr style={{ margin: '20px 0' }} />
 
-      <h2>Create New Game</h2>
-      <CreateGameForm
-        user={user}
-        onSuccess={(code, name) => {
-          alert(`Game created! Code: ${code}\nName: ${name}`);
-          setRefreshGames(prev => prev + 1);
-        }}
-      />
+      {mainView === 'games' ? (
+        <>
+          <h2>Create New Game</h2>
+          <CreateGameForm
+            user={user}
+            onSuccess={(code, name) => {
+              alert(`Game created! Code: ${code}\nName: ${name}`);
+              setRefreshGames(prev => prev + 1);
+            }}
+          />
 
-      <hr style={{ margin: '20px 0' }} />
+          <hr style={{ margin: '20px 0' }} />
 
-      <h2>Join Game</h2>
-      <JoinGameForm
-        user={user}
-        onSuccess={() => {
-          setRefreshGames(prev => prev + 1);
-        }}
-      />
+          <h2>Join Game</h2>
+          <JoinGameForm
+            user={user}
+            onSuccess={() => {
+              setRefreshGames(prev => prev + 1);
+            }}
+          />
 
-      <hr style={{ margin: '20px 0' }} />
+          <hr style={{ margin: '20px 0' }} />
 
-      <GamesList user={user} refresh={refreshGames} />
+          <GamesList
+            user={user}
+            refresh={refreshGames}
+            onViewGame={navigateToGame}
+          />
+        </>
+      ) : (
+        selectedGameCode && (
+          <GamePage
+            gameCode={selectedGameCode}
+            user={user}
+            onBack={navigateToGames}
+          />
+        )
+      )}
     </div>
   );
 }

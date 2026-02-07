@@ -229,6 +229,26 @@ export async function getGame(gameCode: string, token: string): Promise<Game> {
   }
 }
 
+export async function getGameDetails(gameCode: string, token: string): Promise<Game> {
+  try {
+    const response = await fetch(`/api/games/${gameCode}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get game details error:', error);
+    throw error;
+  }
+}
+
 export async function startGame(gameCode: string, token: string): Promise<void> {
   try {
     const response = await fetch(`/api/games/${gameCode}/start`, {

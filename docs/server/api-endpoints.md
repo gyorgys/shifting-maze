@@ -298,6 +298,96 @@ The response includes different fields based on the game's stage:
 
 ---
 
+### Get Game Details
+
+Retrieves full details for a single game, including board state for playing/finished games. Only accessible to players who are part of the game.
+
+**Endpoint:** `GET /api/games/:code`
+
+**Authentication:** Required
+
+**Headers:**
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+**URL Parameters:**
+- `code` - The 4-letter game code (e.g., "ABCD")
+
+**Success Response (200 OK):**
+
+**Example - Playing game with full board state:**
+```json
+{
+  "code": "WXYZ",
+  "name": "Active Game",
+  "createdBy": "alice",
+  "maxPlayers": 4,
+  "stage": "playing",
+  "players": [
+    { "username": "alice", "color": "blue" },
+    { "username": "bob", "color": "red" },
+    { "username": "charlie", "color": "green" }
+  ],
+  "currentPlayerIndex": 0,
+  "currentPhase": "move",
+  "board": [
+    [10, 3, 11, 3, 11, 3, 9],
+    // ... 7x7 matrix of tile bitmasks
+  ],
+  "tileInPlay": 10,
+  "playerPositions": {
+    "blue": [2, 2],
+    "red": [2, 4],
+    "green": [4, 2]
+  },
+  "tokenPositions": {
+    "0": [1, 1],
+    "1": [1, 3],
+    // ... all 21 tokens
+  },
+  "collectedTokens": {
+    "blue": [0, 5],
+    "red": [1],
+    "green": []
+  }
+}
+```
+
+**Response Fields:**
+- `code` - Game code
+- `name` - Game name
+- `createdBy` - Username of game creator
+- `maxPlayers` - Maximum players (always 4)
+- `stage` - Game stage: "unstarted", "playing", or "finished"
+- `players` - Array of players with usernames and colors
+- `currentPlayerIndex` - (playing games only) Index of current player in players array
+- `currentPhase` - (playing games only) Current turn phase ("shift" or "move")
+- `board` - (playing/finished games only) 7x7 matrix of tile bitmasks (0-15)
+- `tileInPlay` - (playing/finished games only) The tile not currently on the board
+- `playerPositions` - (playing/finished games only) Map of color to [row, col] position
+- `tokenPositions` - (playing/finished games only) Map of token ID (0-20) to [row, col]
+- `collectedTokens` - (playing/finished games only) Map of color to array of collected token IDs
+
+**Error Responses:**
+- `401 Unauthorized` - No authentication token provided
+- `403 Forbidden` - User is not a player in this game
+  ```json
+  { "error": "Not authorized to view this game" }
+  ```
+- `404 Not Found` - Game doesn't exist
+  ```json
+  { "error": "Game not found" }
+  ```
+- `500 Internal Server Error` - Server error
+
+**Use Case:**
+This endpoint provides complete game state for rendering the game board. The board state fields (`board`, `tileInPlay`, etc.) are only present when the game is in 'playing' or 'finished' stage.
+
+**Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts)
+
+---
+
 ### Join Game
 
 Adds the authenticated user to an existing game. The game must be in 'unstarted' stage. If no color is specified, the first available color is automatically assigned.

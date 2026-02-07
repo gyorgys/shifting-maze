@@ -84,6 +84,34 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
   }
 });
 
+// GET /api/games/:code - Get single game with full details
+router.get('/:code', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { code } = req.params;
+    const username = req.user!.username;
+
+    // Get game by code
+    const game = await gameService.getGameByCode(code);
+
+    if (!game) {
+      res.status(404).json({ error: 'Game not found' });
+      return;
+    }
+
+    // Check if user is in this game
+    if (!game.players.some(p => p.username === username)) {
+      res.status(403).json({ error: 'Not authorized to view this game' });
+      return;
+    }
+
+    // Return full game state
+    res.status(200).json(game);
+  } catch (error) {
+    console.error('Error getting game:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/games/:code/join - Join game by code (auto-assigns color if not provided)
 router.post('/:code/join', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {

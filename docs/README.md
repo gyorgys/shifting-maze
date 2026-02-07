@@ -50,6 +50,7 @@ Shifting Maze is a web application that allows users to create accounts, authent
 
 - **[Components](./client/components.md)** - React component reference
 - **[Types](./client/types.md)** - TypeScript type definitions
+- **[Utilities](./client/utils.md)** - Utility functions and helpers
 
 ## Quick Start
 

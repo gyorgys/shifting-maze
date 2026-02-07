@@ -163,15 +163,16 @@ code: /^[A-Z]{4}$/
 
 ### GamesList
 
-Displays all games the user is part of.
+Displays all games the user is part of with detailed information and actions.
 
 **File:** [client/src/components/GamesList.tsx](../../client/src/components/GamesList.tsx)
 
 **Props:**
 ```typescript
 interface GamesListProps {
-  username: string;  // Current user's username
-  refresh: number;   // Increment to trigger re-fetch
+  user: User;                                 // Current authenticated user
+  refresh: number;                            // Increment to trigger re-fetch
+  onViewGame?: (gameCode: string) => void;    // Callback when viewing a game
 }
 ```
 
@@ -181,32 +182,236 @@ interface GamesListProps {
 - Error state with retry button
 - Empty state message
 - Manual refresh button
-- Displays for each game:
+- For each game displays:
   - Game name (bold)
-  - Game code
-  - Player count
+  - Game code, player count, stage
+  - Current turn info (for playing games)
+  - Color selector (for unstarted games)
+  - Players list with colors
+  - "Start Game" button (for creator of unstarted games with 2+ players)
+  - "View Game" button (for playing/finished games)
+- Color auto-refresh when dropdown is opened
+- Real-time color updating
 
 **States:**
 - **Loading:** "Loading games..."
 - **Error:** Error message with retry button
 - **Empty:** "No games yet. Create or join a game to get started!"
-- **Success:** List of games with details
+- **Success:** List of games with details and actions
+
+**Game Actions:**
+- **Color Change:** Updates player color for unstarted games
+- **Start Game:** Available to creator when 2-4 players joined
+- **View Game:** Navigate to game detail page (playing/finished games only)
 
 **Usage:**
 ```tsx
 const [refreshGames, setRefreshGames] = useState(0);
 
 <GamesList
-  username="john_doe"
+  user={user}
   refresh={refreshGames}
+  onViewGame={(code) => navigateToGame(code)}
 />
 
 // Trigger refresh after creating/joining game
 <CreateGameForm
-  username="john_doe"
+  user={user}
   onSuccess={() => setRefreshGames(prev => prev + 1)}
 />
 ```
+
+---
+
+## Game Display Components
+
+### GamePage
+
+Main game view page that displays full game state including the board.
+
+**File:** [client/src/components/GamePage.tsx](../../client/src/components/GamePage.tsx)
+
+**Props:**
+```typescript
+interface GamePageProps {
+  gameCode: string;   // The game code to display
+  user: User;         // Current authenticated user
+  onBack: () => void; // Callback to return to games list
+}
+```
+
+**Features:**
+- Fetches full game details on mount using `getGameDetails` API
+- Loading, error, and not-found states
+- Back button to return to games list
+- Displays game header with name and code
+- Info panel showing:
+  - Game stage
+  - Current turn information (for playing games)
+  - Players list with color indicators
+- Game board rendering (via GameBoard component)
+- Fallback message if board state is not available
+
+**States:**
+- **Loading:** "Loading game..."
+- **Error:** Error message with back button
+- **Not Found:** "Game not found"
+- **Success:** Full game view with board
+
+**Usage:**
+```tsx
+<GamePage
+  gameCode="WXYZ"
+  user={user}
+  onBack={() => setView('games')}
+/>
+```
+
+---
+
+### GameBoard
+
+SVG-based game board renderer showing tiles, tokens, and players.
+
+**File:** [client/src/components/GameBoard.tsx](../../client/src/components/GameBoard.tsx)
+
+**Props:**
+```typescript
+interface GameBoardProps {
+  board: Tile[][];                            // 7x7 tile matrix
+  tileInPlay: Tile;                           // Tile not on board
+  playerPositions: { [color: string]: Position };
+  tokenPositions: { [tokenId: string]: Position };
+  collectedTokens: { [color: string]: TokenId[] };
+  tileSize?: number;                          // Default: 80px
+}
+```
+
+**Features:**
+- Renders 7×7 board using SVG
+- Displays tile in play separately below board
+- Handles multiple items on same tile with 2×2 grid layout
+- Configurable tile size (default 80px)
+- Black border around board
+
+**Visual Components:**
+- Tiles with paths (via Tile component)
+- Tokens with values (via Token component)
+- Player markers (via PlayerMarker component)
+
+**Usage:**
+```tsx
+<GameBoard
+  board={game.board}
+  tileInPlay={game.tileInPlay}
+  playerPositions={game.playerPositions}
+  tokenPositions={game.tokenPositions}
+  collectedTokens={game.collectedTokens}
+/>
+```
+
+---
+
+### Tile
+
+SVG component rendering a single maze tile with paths.
+
+**File:** [client/src/components/Tile.tsx](../../client/src/components/Tile.tsx)
+
+**Props:**
+```typescript
+interface TileProps {
+  tile: Tile;    // Bitmask 0-15 (LEFT=0x1, RIGHT=0x2, TOP=0x4, BOTTOM=0x8)
+  x: number;     // X position in SVG
+  y: number;     // Y position in SVG
+  size?: number; // Tile size (default: 80px)
+}
+```
+
+**Features:**
+- Brown background (#8B4513)
+- Sand-colored paths (#F4A460)
+- Path width: 2/5 of tile size
+- Black 1px outline
+- Paths connect open sides to center
+- Center square always present
+
+**Tile Bitmask:**
+```
+LEFT   = 0x1 (Bit 0)
+RIGHT  = 0x2 (Bit 1)
+TOP    = 0x4 (Bit 2)
+BOTTOM = 0x8 (Bit 3)
+```
+
+**Example Values:**
+- 0x3 (LEFT | RIGHT) = straight horizontal path
+- 0xC (TOP | BOTTOM) = straight vertical path
+- 0xA (RIGHT | BOTTOM) = corner path
+- 0xB (LEFT | RIGHT | BOTTOM) = T-junction
+
+---
+
+### Token
+
+SVG component rendering a token (white circle with value).
+
+**File:** [client/src/components/Token.tsx](../../client/src/components/Token.tsx)
+
+**Props:**
+```typescript
+interface TokenProps {
+  tokenId: TokenId;                              // 0-20
+  x: number;                                     // Tile X position
+  y: number;                                     // Tile Y position
+  gridOffset: { dx: number; dy: number };        // Offset for multiple items
+  tileSize?: number;                             // Default: 80px
+}
+```
+
+**Features:**
+- White circle with black 2px stroke
+- Diameter: 1/2 of tile size (40px for 80px tile)
+- Centered in tile + grid offset
+- Token values:
+  - Tokens 0-19 display 1-20
+  - Token 20 displays 25
+- Black bold text (16px Arial)
+
+**Visual Specs:**
+- Circle diameter: 0.5 × tileSize
+- Text: centered, bold, 16px
+
+---
+
+### PlayerMarker
+
+SVG component rendering a player marker (concentric circles).
+
+**File:** [client/src/components/PlayerMarker.tsx](../../client/src/components/PlayerMarker.tsx)
+
+**Props:**
+```typescript
+interface PlayerMarkerProps {
+  color: PlayerColor;                            // 'red' | 'green' | 'blue' | 'white'
+  x: number;                                     // Tile X position
+  y: number;                                     // Tile Y position
+  gridOffset: { dx: number; dy: number };        // Offset for multiple items
+  tileSize?: number;                             // Default: 80px
+}
+```
+
+**Features:**
+- Two concentric circles in player's color
+- Outer diameter: 3/10 of tile size (24px for 80px tile)
+- Inner diameter: 1/5 of tile size (16px for 80px tile)
+- Both circles have black 2px stroke
+- Centered in tile + grid offset
+
+**Visual Specs:**
+- Outer circle: 0.3 × tileSize diameter
+- Inner circle: 0.2 × tileSize diameter
+- Both filled with player color
 
 ---
 
@@ -214,14 +419,15 @@ const [refreshGames, setRefreshGames] = useState(0);
 
 ### App
 
-Root application component with authentication state management.
+Root application component with authentication and view routing.
 
 **File:** [client/src/App.tsx](../../client/src/App.tsx)
 
 **Features:**
 - Uses `useAuth` hook for authentication state
-- Conditional rendering based on auth status
+- State-based view routing (no routing library)
 - View toggle between login and registration
+- Navigation between games list and game detail
 - Game list refresh mechanism
 
 **Views:**
@@ -235,19 +441,38 @@ Root application component with authentication state management.
    - CreateUserForm component
    - Toggle buttons to switch views
 
-3. **Authenticated View:**
+3. **Authenticated - Games View:**
    - Welcome message with user's display name
    - Logout button
    - CreateGameForm component
    - JoinGameForm component
-   - GamesList component
+   - GamesList component (with "View Game" buttons for playing games)
    - Auto-refresh of games list after creating/joining
+
+4. **Authenticated - Game Detail View:**
+   - GamePage component showing full game state
+   - Back button to return to games list
 
 **State Management:**
 ```typescript
 const { user, loading, login, logout } = useAuth();
-const [view, setView] = useState<'login' | 'create'>('login');
+const [authView, setAuthView] = useState<'login' | 'create'>('login');
+const [mainView, setMainView] = useState<'games' | 'game-detail'>('games');
+const [selectedGameCode, setSelectedGameCode] = useState<string | null>(null);
 const [refreshGames, setRefreshGames] = useState(0);
+```
+
+**Navigation:**
+```typescript
+const navigateToGame = (gameCode: string) => {
+  setSelectedGameCode(gameCode);
+  setMainView('game-detail');
+};
+
+const navigateToGames = () => {
+  setSelectedGameCode(null);
+  setMainView('games');
+};
 ```
 
 ---
@@ -261,9 +486,16 @@ App
 │   ├── LoginForm
 │   └── CreateUserForm
 └── (Authenticated)
-    ├── CreateGameForm
-    ├── JoinGameForm
-    └── GamesList
+    ├── Games View
+    │   ├── CreateGameForm
+    │   ├── JoinGameForm
+    │   └── GamesList
+    └── Game Detail View
+        └── GamePage
+            └── GameBoard
+                ├── Tile (×49)
+                ├── Token (×0-21)
+                └── PlayerMarker (×2-4)
 ```
 
 ## Common Patterns
