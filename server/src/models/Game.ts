@@ -7,6 +7,15 @@ export type GameStage = 'unstarted' | 'playing' | 'finished';
 // Turn phases - each turn has two phases
 export type TurnPhase = 'shift' | 'move';
 
+// Board position coordinates [row, col]
+export type Position = [number, number];
+
+// Tile representation (0-15, 4-bit bitmask for L/R/T/B sides)
+export type Tile = number;
+
+// Token identifier (0-20)
+export type TokenId = number;
+
 // Player in a game
 export interface Player {
   username: string;
@@ -31,11 +40,11 @@ export interface Game {
   currentPhase?: TurnPhase;     // Current phase: 'shift' or 'move'
 
   // Board state (only present when stage is 'playing')
-  board?: number[][];  // 7x7 matrix of tiles (each tile is 0-15 bitmask)
-  tileInPlay?: number; // The extra tile not currently on the board
-  playerPositions?: { [color: string]: [number, number] }; // Map of player color to [row, col] position
-  tokenPositions?: { [tokenId: string]: [number, number] }; // Map of token ID to [row, col] position (for tokens on board)
-  collectedTokens?: { [color: string]: number[] }; // Map of player color to collected token IDs
+  board?: Tile[][];  // 7x7 matrix of tiles
+  tileInPlay?: Tile; // The extra tile not currently on the board
+  playerPositions?: { [color: string]: Position }; // Map of player color to board position
+  tokenPositions?: { [tokenId: string]: Position }; // Map of token ID to board position (for tokens on board)
+  collectedTokens?: { [color: string]: TokenId[] }; // Map of player color to collected token IDs
 }
 
 export interface CreateGameRequest {

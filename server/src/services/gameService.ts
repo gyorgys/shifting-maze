@@ -1,4 +1,4 @@
-import { Game, PlayerColor } from '../models/Game';
+import { Game, PlayerColor, Position } from '../models/Game';
 import * as storage from '../utils/fileStorage';
 import { isValidGameName, generateGameCode } from '../utils/validation';
 import { initializeBoard, initializeTokens } from '../utils/boardUtils';
@@ -150,14 +150,14 @@ export async function startGame(code: string, username: string): Promise<void> {
 
   // Initialize player positions based on their colors
   // Starting positions: red(2,2), blue(2,4), green(4,2), white(4,4)
-  const startingPositions: { [color: string]: [number, number] } = {
+  const startingPositions: { [color: string]: Position } = {
     'red': [2, 2],
     'blue': [2, 4],
     'green': [4, 2],
     'white': [4, 4]
   };
 
-  const playerPositions: { [color: string]: [number, number] } = {};
+  const playerPositions: { [color: string]: Position } = {};
   for (const player of game.players) {
     playerPositions[player.color] = startingPositions[player.color];
   }

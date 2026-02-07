@@ -1,3 +1,5 @@
+import { Tile } from '../models/Game';
+
 // Tile bit positions for bitmask representation
 // Each tile has 4 sides that can be open (1) or closed (0)
 const LEFT = 0x1;    // Bit 0
@@ -9,7 +11,7 @@ const BOTTOM = 0x8;  // Bit 3
  * Rotates a tile 90 degrees clockwise
  * L → T, T → R, R → B, B → L
  */
-export function rotateTile(tile: number): number {
+export function rotateTile(tile: Tile): Tile {
   const left = tile & LEFT;
   const right = tile & RIGHT;
   const top = tile & TOP;
@@ -26,7 +28,7 @@ export function rotateTile(tile: number): number {
  * @param tile The tile to rotate
  * @param n Number of 90-degree rotations (0-3)
  */
-export function rotateTileNTimes(tile: number, n: number): number {
+export function rotateTileNTimes(tile: Tile, n: number): Tile {
   let rotated = tile;
   for (let i = 0; i < (n % 4); i++) {
     rotated = rotateTile(rotated);
@@ -38,7 +40,7 @@ export function rotateTileNTimes(tile: number, n: number): number {
  * Creates a tile from a string notation like "RB", "LRT", etc.
  * L = Left, R = Right, T = Top, B = Bottom
  */
-export function createTile(sides: string): number {
+export function createTile(sides: string): Tile {
   let tile = 0;
   const upper = sides.toUpperCase();
 
@@ -54,7 +56,7 @@ export function createTile(sides: string): number {
  * Gets the string representation of a tile for debugging
  * Returns sides in alphabetical order (BLRT)
  */
-export function getTileSides(tile: number): string {
+export function getTileSides(tile: Tile): string {
   const sides: string[] = [];
 
   if (tile & BOTTOM) sides.push('B');

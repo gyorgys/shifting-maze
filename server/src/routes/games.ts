@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import * as gameService from '../services/gameService';
-import { CreateGameRequest, JoinGameRequest, UpdatePlayerColorRequest } from '../models/Game';
+import { CreateGameRequest, JoinGameRequest, UpdatePlayerColorRequest, PlayerColor } from '../models/Game';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -56,7 +56,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
 
         // Add available colors if game can be joined (unstarted and not full)
         if (game.stage === 'unstarted' && game.players.length < game.maxPlayers) {
-          const allColors: Array<'red' | 'green' | 'blue' | 'white'> = ['red', 'green', 'blue', 'white'];
+          const allColors: PlayerColor[] = ['red', 'green', 'blue', 'white'];
           const takenColors = game.players.map(p => p.color);
           const availableColors = allColors.filter(color => !takenColors.includes(color));
           return { ...baseInfo, availableColors };

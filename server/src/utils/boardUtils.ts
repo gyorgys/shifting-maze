@@ -1,12 +1,13 @@
 import { createTile, rotateTileNTimes } from './tileUtils';
+import { Position, Tile, TokenId } from '../models/Game';
 
 /**
  * Returns a map of fixed tile positions
  * Key format: "row,col" (e.g., "0,0")
  * Value: tile bitmask
  */
-function getFixedTilePositions(): Map<string, number> {
-  const fixed = new Map<string, number>();
+function getFixedTilePositions(): Map<string, Tile> {
+  const fixed = new Map<string, Tile>();
 
   // Row 0
   fixed.set('0,0', createTile('RB'));   // 0xA
@@ -41,8 +42,8 @@ function getFixedTilePositions(): Map<string, number> {
  * - 13 LR (straight)
  * - 6 LRB (T-junction)
  */
-function createFreeTiles(): number[] {
-  const tiles: number[] = [];
+function createFreeTiles(): Tile[] {
+  const tiles: Tile[] = [];
 
   // 15 corner tiles (RB)
   const cornerTile = createTile('RB');
@@ -80,7 +81,7 @@ function shuffleArray<T>(array: T[]): T[] {
 /**
  * Shuffles tiles and randomly rotates each one
  */
-function shuffleAndRotateTiles(tiles: number[]): number[] {
+function shuffleAndRotateTiles(tiles: Tile[]): Tile[] {
   const shuffled = shuffleArray(tiles);
 
   // Randomly rotate each tile (0-3 times)
@@ -94,9 +95,9 @@ function shuffleAndRotateTiles(tiles: number[]): number[] {
  * Initializes a new game board with fixed tiles and randomly placed free tiles
  * @returns Object containing the 7x7 board and the tile in play
  */
-export function initializeBoard(): { board: number[][], tileInPlay: number } {
+export function initializeBoard(): { board: Tile[][], tileInPlay: Tile } {
   // 1. Create 7x7 board filled with 0s
-  const board: number[][] = Array(7).fill(null).map(() => Array(7).fill(0));
+  const board: Tile[][] = Array(7).fill(null).map(() => Array(7).fill(0));
 
   // 2. Place fixed tiles at their positions
   const fixedTiles = getFixedTilePositions();
@@ -130,7 +131,7 @@ export function initializeBoard(): { board: number[][], tileInPlay: number } {
  * Gets the point value of a token
  * Tokens 0-19 have values 1-20, token 20 has value 25
  */
-export function getTokenValue(tokenId: number): number {
+export function getTokenValue(tokenId: TokenId): number {
   if (tokenId >= 0 && tokenId <= 19) {
     return tokenId + 1; // Token 0 = 1 point, token 1 = 2 points, ..., token 19 = 20 points
   } else if (tokenId === 20) {
@@ -142,13 +143,13 @@ export function getTokenValue(tokenId: number): number {
 /**
  * Initializes token positions on the board
  * Places 21 tokens (IDs 0-20) on interior tiles, excluding edges and player starting positions
- * @returns Map of token ID to [row, col] position
+ * @returns Map of token ID to position
  */
-export function initializeTokens(): { [tokenId: string]: [number, number] } {
+export function initializeTokens(): { [tokenId: string]: Position } {
   // Get all valid positions for tokens
   // Interior tiles (rows 1-5, cols 1-5) excluding player starting positions
   const playerStartPositions = new Set(['2,2', '2,4', '4,2', '4,4']);
-  const validPositions: [number, number][] = [];
+  const validPositions: Position[] = [];
 
   for (let row = 1; row <= 5; row++) {
     for (let col = 1; col <= 5; col++) {
@@ -168,7 +169,7 @@ export function initializeTokens(): { [tokenId: string]: [number, number] } {
   const shuffledPositions = shuffleArray(validPositions);
 
   // Assign tokens 0-20 to the shuffled positions
-  const tokenPositions: { [tokenId: string]: [number, number] } = {};
+  const tokenPositions: { [tokenId: string]: Position } = {};
   for (let tokenId = 0; tokenId <= 20; tokenId++) {
     tokenPositions[tokenId.toString()] = shuffledPositions[tokenId];
   }

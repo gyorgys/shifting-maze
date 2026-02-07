@@ -2,6 +2,40 @@
 
 This document describes the data models used in the Shifting Maze server.
 
+## Type Definitions
+
+**File:** [server/src/models/Game.ts](../../server/src/models/Game.ts)
+
+### PlayerColor Type
+
+Player colors available in the game.
+
+```typescript
+type PlayerColor = 'red' | 'green' | 'blue' | 'white';
+```
+
+**Values:**
+- `'red'` - Red player
+- `'green'` - Green player
+- `'blue'` - Blue player
+- `'white'` - White player
+
+**Usage:** String literal union type for player identification and color assignment.
+
+### Type Aliases
+
+```typescript
+type Position = [number, number];  // Board coordinates [row, col]
+type Tile = number;                // Tile bitmask (0-15)
+type TokenId = number;             // Token identifier (0-20)
+```
+
+**Position:** Represents a board coordinate as `[row, col]`. Used for player positions, token positions, etc.
+
+**Tile:** Represents a tile using a 4-bit bitmask (0-15) where each bit indicates if a side is open.
+
+**TokenId:** Represents a token identifier (0-20). Each token has a unique ID.
+
 ## User Model
 
 **File:** [server/src/models/User.ts](../../server/src/models/User.ts)
