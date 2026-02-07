@@ -1,0 +1,89 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Client",
+      "type": "shell",
+      "command": "cd client && npm run build",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+    {
+      "label": "Run Server",
+      "type": "shell",
+      "command": "cd server && npm run dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^Server is running on (.*)$",
+          "line": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^> shifting-maze-server",
+          "endsPattern": "^Server is running on"
+        }
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": false,
+        "group": "dev"
+      }
+    },
+    {
+      "label": "Run Client",
+      "type": "shell",
+      "command": "cd client && npm run dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^  ➜  Local:   (.*)$",
+          "line": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^> shifting-maze-client",
+          "endsPattern": "^  ➜  Local:"
+        }
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": false,
+        "group": "dev"
+      }
+    },
+    {
+      "label": "Run",
+      "dependsOn": [
+        "Run Server",
+        "Run Client"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Build & Run",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Build Client",
+        "Run Server",
+        "Run Client"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
