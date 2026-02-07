@@ -125,3 +125,53 @@ export function initializeBoard(): { board: number[][], tileInPlay: number } {
 
   return { board, tileInPlay };
 }
+
+/**
+ * Gets the point value of a token
+ * Tokens 0-19 have values 1-20, token 20 has value 25
+ */
+export function getTokenValue(tokenId: number): number {
+  if (tokenId >= 0 && tokenId <= 19) {
+    return tokenId + 1; // Token 0 = 1 point, token 1 = 2 points, ..., token 19 = 20 points
+  } else if (tokenId === 20) {
+    return 25;
+  }
+  throw new Error(`Invalid token ID: ${tokenId}`);
+}
+
+/**
+ * Initializes token positions on the board
+ * Places 21 tokens (IDs 0-20) on interior tiles, excluding edges and player starting positions
+ * @returns Map of token ID to [row, col] position
+ */
+export function initializeTokens(): { [tokenId: string]: [number, number] } {
+  // Get all valid positions for tokens
+  // Interior tiles (rows 1-5, cols 1-5) excluding player starting positions
+  const playerStartPositions = new Set(['2,2', '2,4', '4,2', '4,4']);
+  const validPositions: [number, number][] = [];
+
+  for (let row = 1; row <= 5; row++) {
+    for (let col = 1; col <= 5; col++) {
+      const posKey = `${row},${col}`;
+      if (!playerStartPositions.has(posKey)) {
+        validPositions.push([row, col]);
+      }
+    }
+  }
+
+  // Should have exactly 21 valid positions (5x5 - 4 player starts = 21)
+  if (validPositions.length !== 21) {
+    throw new Error(`Expected 21 valid token positions, got ${validPositions.length}`);
+  }
+
+  // Shuffle the positions
+  const shuffledPositions = shuffleArray(validPositions);
+
+  // Assign tokens 0-20 to the shuffled positions
+  const tokenPositions: { [tokenId: string]: [number, number] } = {};
+  for (let tokenId = 0; tokenId <= 20; tokenId++) {
+    tokenPositions[tokenId.toString()] = shuffledPositions[tokenId];
+  }
+
+  return tokenPositions;
+}

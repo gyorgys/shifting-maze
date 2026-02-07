@@ -34,6 +34,8 @@ export interface Game {
   board?: number[][];  // 7x7 matrix of tiles (each tile is 0-15 bitmask)
   tileInPlay?: number; // The extra tile not currently on the board
   playerPositions?: { [color: string]: [number, number] }; // Map of player color to [row, col] position
+  tokenPositions?: { [tokenId: string]: [number, number] }; // Map of token ID to [row, col] position (for tokens on board)
+  collectedTokens?: { [color: string]: number[] }; // Map of player color to collected token IDs
 }
 
 export interface CreateGameRequest {

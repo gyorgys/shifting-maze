@@ -1,7 +1,7 @@
 import { Game, PlayerColor } from '../models/Game';
 import * as storage from '../utils/fileStorage';
 import { isValidGameName, generateGameCode } from '../utils/validation';
-import { initializeBoard } from '../utils/boardUtils';
+import { initializeBoard, initializeTokens } from '../utils/boardUtils';
 
 async function generateUniqueGameCode(): Promise<string> {
   let attempts = 0;
@@ -162,6 +162,15 @@ export async function startGame(code: string, username: string): Promise<void> {
     playerPositions[player.color] = startingPositions[player.color];
   }
 
+  // Initialize tokens on the board (21 tokens on interior tiles)
+  const tokenPositions = initializeTokens();
+
+  // Initialize collected tokens (empty at start)
+  const collectedTokens: { [color: string]: number[] } = {};
+  for (const player of game.players) {
+    collectedTokens[player.color] = [];
+  }
+
   // Set game to playing stage with board
   game.stage = 'playing';
   game.currentPlayerIndex = 0;  // First player in randomized order
@@ -169,6 +178,8 @@ export async function startGame(code: string, username: string): Promise<void> {
   game.board = board;
   game.tileInPlay = tileInPlay;
   game.playerPositions = playerPositions;
+  game.tokenPositions = tokenPositions;
+  game.collectedTokens = collectedTokens;
 
   // Write updated game
   const gamePath = storage.getGameFilePath(code);

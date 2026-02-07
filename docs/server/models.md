@@ -137,6 +137,8 @@ interface Game {
   board?: number[][];      // 7x7 matrix of tiles (each tile is 0-15 bitmask)
   tileInPlay?: number;     // The extra tile not currently on the board
   playerPositions?: { [color: string]: [number, number] }; // Map of player color to [row, col]
+  tokenPositions?: { [tokenId: string]: [number, number] }; // Map of token ID to position (tokens on board)
+  collectedTokens?: { [color: string]: number[] }; // Map of player color to collected token IDs
 }
 ```
 
@@ -188,6 +190,8 @@ When a game is in the `playing` stage, the following fields track the game board
 board?: number[][];        // 7x7 matrix of tiles (only present when playing)
 tileInPlay?: number;       // The extra tile not on board (only present when playing)
 playerPositions?: { [color: string]: [number, number] }; // Player positions by color
+tokenPositions?: { [tokenId: string]: [number, number] }; // Token positions on board
+collectedTokens?: { [color: string]: number[] }; // Tokens collected by players
 ```
 
 **Tile Representation:**
@@ -271,6 +275,43 @@ playerPositions: {
   "green": [4, 2]
 }
 // Only 3 players in this game, so white position is not present
+```
+
+**Tokens:**
+
+The game includes 21 unique tokens (IDs 0-20) that players collect for points.
+
+Token values:
+- **Tokens 0-19**: Values 1-20 respectively (token 0 = 1 point, token 1 = 2 points, ..., token 19 = 20 points)
+- **Token 20**: Special token worth 25 points
+
+**Token Placement:**
+
+At game start, all 21 tokens are placed randomly on the board:
+- Placed on interior tiles only (rows 1-5, cols 1-5)
+- Excludes edge tiles (row 0, row 6, col 0, col 6)
+- Excludes player starting positions (2,2), (2,4), (4,2), (4,4)
+- This gives exactly 21 valid positions (5×5 - 4 player starts)
+
+**Token State:**
+
+Tokens can be in one of two states:
+1. **On the board**: Tracked in `tokenPositions` map (token ID → position)
+2. **Collected by player**: Tracked in `collectedTokens` map (player color → array of token IDs)
+
+Example:
+```typescript
+tokenPositions: {
+  "0": [1, 1],  // Token 0 (value 1) at position (1,1)
+  "5": [3, 3],  // Token 5 (value 6) at position (3,3)
+  "20": [5, 5]  // Token 20 (value 25) at position (5,5)
+  // ... other tokens on board
+},
+collectedTokens: {
+  "red": [2, 7, 15],    // Red player collected tokens 2, 7, 15 (worth 3+8+16 = 27 points)
+  "blue": [1, 20],      // Blue player collected tokens 1, 20 (worth 2+25 = 27 points)
+  "green": []           // Green player hasn't collected any tokens yet
+}
 ```
 
 ### CreateGameRequest
