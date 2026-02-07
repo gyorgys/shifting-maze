@@ -148,12 +148,27 @@ export async function startGame(code: string, username: string): Promise<void> {
   // Initialize the board
   const { board, tileInPlay } = initializeBoard();
 
+  // Initialize player positions based on their colors
+  // Starting positions: red(2,2), blue(2,4), green(4,2), white(4,4)
+  const startingPositions: { [color: string]: [number, number] } = {
+    'red': [2, 2],
+    'blue': [2, 4],
+    'green': [4, 2],
+    'white': [4, 4]
+  };
+
+  const playerPositions: { [color: string]: [number, number] } = {};
+  for (const player of game.players) {
+    playerPositions[player.color] = startingPositions[player.color];
+  }
+
   // Set game to playing stage with board
   game.stage = 'playing';
   game.currentPlayerIndex = 0;  // First player in randomized order
   game.currentPhase = 'shift';  // Start with shift phase
   game.board = board;
   game.tileInPlay = tileInPlay;
+  game.playerPositions = playerPositions;
 
   // Write updated game
   const gamePath = storage.getGameFilePath(code);

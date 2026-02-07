@@ -196,7 +196,12 @@ server/data/
     [3, 10, 11, 9, 6, 5, 11],
     [6, 3, 7, 5, 7, 9, 5]
   ],
-  "tileInPlay": 10
+  "tileInPlay": 10,
+  "playerPositions": {
+    "green": [4, 2],
+    "red": [2, 2],
+    "blue": [2, 4]
+  }
 }
 ```
 

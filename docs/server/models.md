@@ -136,6 +136,7 @@ interface Game {
   // Board state (only present when stage is 'playing')
   board?: number[][];      // 7x7 matrix of tiles (each tile is 0-15 bitmask)
   tileInPlay?: number;     // The extra tile not currently on the board
+  playerPositions?: { [color: string]: [number, number] }; // Map of player color to [row, col]
 }
 ```
 
@@ -186,6 +187,7 @@ When a game is in the `playing` stage, the following fields track the game board
 ```typescript
 board?: number[][];        // 7x7 matrix of tiles (only present when playing)
 tileInPlay?: number;       // The extra tile not on board (only present when playing)
+playerPositions?: { [color: string]: [number, number] }; // Player positions by color
 ```
 
 **Tile Representation:**
@@ -248,6 +250,28 @@ Example: RB (0xA = 1010) rotates to:
 2. LT (0x5 = 0101)
 3. RT (0x6 = 0110)
 4. RB (0xA = 1010) - back to original
+
+**Player Positions:**
+
+Player positions are tracked by color, mapping each color to a `[row, col]` coordinate on the 7×7 board.
+
+Starting positions are fixed based on player color:
+- **Red**: (2, 2)
+- **Blue**: (2, 4)
+- **Green**: (4, 2)
+- **White**: (4, 4)
+
+These positions correspond to the fixed T-junction tiles on the board. When a game starts, each player is placed at their color's starting position.
+
+Example:
+```typescript
+playerPositions: {
+  "red": [2, 2],
+  "blue": [2, 4],
+  "green": [4, 2]
+}
+// Only 3 players in this game, so white position is not present
+```
 
 ### CreateGameRequest
 
