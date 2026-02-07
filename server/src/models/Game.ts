@@ -29,6 +29,10 @@ export interface Game {
   // Turn tracking (only used when stage is 'playing')
   currentPlayerIndex?: number;  // Index into players array indicating whose turn it is
   currentPhase?: TurnPhase;     // Current phase: 'shift' or 'move'
+
+  // Board state (only present when stage is 'playing')
+  board?: number[][];  // 7x7 matrix of tiles (each tile is 0-15 bitmask)
+  tileInPlay?: number; // The extra tile not currently on the board
 }
 
 export interface CreateGameRequest {

@@ -1,6 +1,7 @@
 import { Game, PlayerColor } from '../models/Game';
 import * as storage from '../utils/fileStorage';
 import { isValidGameName, generateGameCode } from '../utils/validation';
+import { initializeBoard } from '../utils/boardUtils';
 
 async function generateUniqueGameCode(): Promise<string> {
   let attempts = 0;
@@ -144,10 +145,15 @@ export async function startGame(code: string, username: string): Promise<void> {
   // Randomize player order
   game.players = shuffleArray(game.players);
 
-  // Set game to playing stage
+  // Initialize the board
+  const { board, tileInPlay } = initializeBoard();
+
+  // Set game to playing stage with board
   game.stage = 'playing';
   game.currentPlayerIndex = 0;  // First player in randomized order
   game.currentPhase = 'shift';  // Start with shift phase
+  game.board = board;
+  game.tileInPlay = tileInPlay;
 
   // Write updated game
   const gamePath = storage.getGameFilePath(code);

@@ -132,6 +132,10 @@ interface Game {
   // Turn tracking (only used when stage is 'playing')
   currentPlayerIndex?: number;   // Index into players array
   currentPhase?: TurnPhase;      // 'shift' | 'move'
+
+  // Board state (only present when stage is 'playing')
+  board?: number[][];      // 7x7 matrix of tiles (each tile is 0-15 bitmask)
+  tileInPlay?: number;     // The extra tile not currently on the board
 }
 ```
 
@@ -174,6 +178,76 @@ Each player's turn consists of two phases:
 **Storage:**
 - Location: `server/data/games/{code}.json`
 - Format: JSON file per game
+
+### Board State Fields
+
+When a game is in the `playing` stage, the following fields track the game board:
+
+```typescript
+board?: number[][];        // 7x7 matrix of tiles (only present when playing)
+tileInPlay?: number;       // The extra tile not on board (only present when playing)
+```
+
+**Tile Representation:**
+
+Each tile is a number (0-15) representing a 4-bit bitmask where each bit indicates if a side is open:
+- Bit 0 (0x1): Left side open
+- Bit 1 (0x2): Right side open
+- Bit 2 (0x4): Top side open
+- Bit 3 (0x8): Bottom side open
+
+**Examples:**
+- Corner tile (Right+Bottom): `0x2 | 0x8 = 0xA` (binary 1010)
+- Straight tile (Left+Right): `0x1 | 0x2 = 0x3` (binary 0011)
+- T-junction (Left+Right+Bottom): `0x1 | 0x2 | 0x8 = 0xB` (binary 1011)
+
+**Fixed Tiles (16 total):**
+
+These tiles are always at the same positions with the same orientations:
+
+| Position | Tile | Hex | Description |
+|----------|------|-----|-------------|
+| (0,0) | RB | 0xA | Corner |
+| (0,2) | LRB | 0xB | T-junction |
+| (0,4) | LRB | 0xB | T-junction |
+| (0,6) | LB | 0x9 | Corner |
+| (2,0) | RTB | 0xE | T-junction |
+| (2,2) | RTB | 0xE | T-junction |
+| (2,4) | LRB | 0xB | T-junction |
+| (2,6) | LTB | 0xD | T-junction |
+| (4,0) | RTB | 0xE | T-junction |
+| (4,2) | LRT | 0x7 | T-junction |
+| (4,4) | LTB | 0xD | T-junction |
+| (4,6) | LTB | 0xD | T-junction |
+| (6,0) | RT | 0x6 | Corner |
+| (6,2) | LRT | 0x7 | T-junction |
+| (6,4) | LRT | 0x7 | T-junction |
+| (6,6) | LT | 0x5 | Corner |
+
+**Free Tiles (34 total):**
+
+These tiles are randomly placed and rotated when the game starts:
+- 15 corner tiles (RB base, 0xA)
+- 13 straight tiles (LR base, 0x3)
+- 6 T-junction tiles (LRB base, 0xB)
+
+Of these 34 tiles:
+- 33 are placed on the board (filling the non-fixed positions)
+- 1 is kept as the `tileInPlay` (the extra tile)
+
+**Tile Rotation:**
+
+Tiles can be rotated 90° clockwise. When rotated, the bits shift as follows:
+- Left → Top
+- Top → Right
+- Right → Bottom
+- Bottom → Left
+
+Example: RB (0xA = 1010) rotates to:
+1. LB (0x9 = 1001)
+2. LT (0x5 = 0101)
+3. RT (0x6 = 0110)
+4. RB (0xA = 1010) - back to original
 
 ### CreateGameRequest
 

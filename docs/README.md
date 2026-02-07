@@ -186,9 +186,21 @@ server/data/
   ],
   "maxPlayers": 4,
   "currentPlayerIndex": 1,
-  "currentPhase": "move"
+  "currentPhase": "move",
+  "board": [
+    [10, 3, 11, 7, 11, 9, 9],
+    [3, 10, 5, 11, 3, 6, 10],
+    [14, 5, 14, 3, 11, 6, 13],
+    [11, 10, 3, 5, 9, 3, 7],
+    [14, 6, 7, 11, 13, 10, 13],
+    [3, 10, 11, 9, 6, 5, 11],
+    [6, 3, 7, 5, 7, 9, 5]
+  ],
+  "tileInPlay": 10
 }
 ```
+
+**Note:** Board tiles are represented as numbers (0-15) using bitmasks. See [Models documentation](./server/models.md#board-state-fields) for details on tile encoding.
 
 ## Technology Stack
 
