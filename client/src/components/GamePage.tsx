@@ -110,7 +110,7 @@ export function GamePage({ gameCode, user }: GamePageProps) {
           <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>
             Tile in Play:
           </div>
-          <svg viewBox={`0 0 ${TILE_SIZE} ${TILE_SIZE}`} style={{ border: '1px solid #000', height: 'calc(75vh / 7)', width: 'auto' }}>
+          <svg viewBox={`0 0 ${TILE_SIZE} ${TILE_SIZE}`} style={{ border: '1px solid #000', height: 'calc(75vh / 7)', width: 'auto', display: 'block', margin: '0 auto' }}>
             <Tile
               tile={game.tileInPlay}
               x={0}
@@ -118,6 +118,42 @@ export function GamePage({ gameCode, user }: GamePageProps) {
               size={TILE_SIZE}
             />
           </svg>
+
+          {/* Rotation controls */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '10px', justifyContent: 'center' }}>
+            <button
+              onClick={() => console.log('Rotate CW')}
+              style={{
+                padding: '12px 16px',
+                fontSize: '28px',
+                backgroundColor: '#17a2b8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                lineHeight: 1,
+              }}
+              title="Rotate Clockwise"
+            >
+              ↻
+            </button>
+            <button
+              onClick={() => console.log('Rotate CCW')}
+              style={{
+                padding: '12px 16px',
+                fontSize: '28px',
+                backgroundColor: '#17a2b8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                lineHeight: 1,
+              }}
+              title="Rotate Counter-Clockwise"
+            >
+              ↺
+            </button>
+          </div>
         </div>
       )}
     </div>
