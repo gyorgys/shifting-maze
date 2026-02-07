@@ -84,6 +84,58 @@ interface LoginFormProps {
 
 ---
 
+## Layout Components
+
+### AppHeader
+
+Persistent header bar displayed across all views with app branding, view-specific center content, and user controls.
+
+**File:** [client/src/components/AppHeader.tsx](../../client/src/components/AppHeader.tsx)
+
+**Props:**
+```typescript
+interface AppHeaderProps {
+  content?: ReactNode;   // View-specific center content
+  username?: string;     // Logged-in user's display name
+  onLogout?: () => void; // Logout callback
+}
+```
+
+**Features:**
+- Left: "Shifting Maze" app title
+- Center: Customizable content via `content` prop
+  - Home page: "Games" heading
+  - Game page: Game name as title, game code as subtitle
+- Right: User display name + logout button (shown only when `username` and `onLogout` are provided)
+- Flexbox layout with bottom border separator
+
+**Usage:**
+```tsx
+// Unauthenticated (title only)
+<AppHeader />
+
+// Home page
+<AppHeader
+  content={<h2>Games</h2>}
+  username={user.displayName}
+  onLogout={logout}
+/>
+
+// Game detail page
+<AppHeader
+  content={
+    <div>
+      <h2>My Game</h2>
+      <span>WXYZ</span>
+    </div>
+  }
+  username={user.displayName}
+  onLogout={logout}
+/>
+```
+
+---
+
 ## Game Management Components
 
 ### CreateGameForm
@@ -172,7 +224,7 @@ Displays all games the user is part of with detailed information and actions.
 interface GamesListProps {
   user: User;                                 // Current authenticated user
   refresh: number;                            // Increment to trigger re-fetch
-  onViewGame?: (gameCode: string) => void;    // Callback when viewing a game
+  onViewGame?: (gameCode: string, gameName: string) => void;  // Callback when viewing a game
 }
 ```
 
@@ -211,7 +263,7 @@ const [refreshGames, setRefreshGames] = useState(0);
 <GamesList
   user={user}
   refresh={refreshGames}
-  onViewGame={(code) => navigateToGame(code)}
+  onViewGame={(code, name) => navigateToGame(code, name)}
 />
 
 // Trigger refresh after creating/joining game
@@ -244,7 +296,7 @@ interface GamePageProps {
 - Fetches full game details on mount using `getGameDetails` API
 - Loading, error, and not-found states
 - Back button to return to games list
-- Displays game header with name and code
+- Game name and code displayed in AppHeader (via parent App)
 - Info panel showing:
   - Game stage
   - Current turn information (for playing games)
@@ -426,6 +478,7 @@ Root application component with authentication and view routing.
 **Features:**
 - Uses `useAuth` hook for authentication state
 - State-based view routing (no routing library)
+- AppHeader displayed on all views with view-specific center content
 - View toggle between login and registration
 - Navigation between games list and game detail
 - Game list refresh mechanism
@@ -433,23 +486,25 @@ Root application component with authentication and view routing.
 **Views:**
 
 1. **Loading State:**
+   - AppHeader (title only)
    - Shown while checking localStorage for existing session
 
 2. **Unauthenticated View:**
+   - AppHeader (title only)
    - Toggle between Login and Create Account
    - LoginForm component
    - CreateUserForm component
    - Toggle buttons to switch views
 
 3. **Authenticated - Games View:**
-   - Welcome message with user's display name
-   - Logout button
+   - AppHeader with "Games" center title, user info + logout
    - CreateGameForm component
    - JoinGameForm component
    - GamesList component (with "View Game" buttons for playing games)
    - Auto-refresh of games list after creating/joining
 
 4. **Authenticated - Game Detail View:**
+   - AppHeader with game name/code center content, user info + logout
    - GamePage component showing full game state
    - Back button to return to games list
 
@@ -459,18 +514,21 @@ const { user, loading, login, logout } = useAuth();
 const [authView, setAuthView] = useState<'login' | 'create'>('login');
 const [mainView, setMainView] = useState<'games' | 'game-detail'>('games');
 const [selectedGameCode, setSelectedGameCode] = useState<string | null>(null);
+const [selectedGameName, setSelectedGameName] = useState<string | null>(null);
 const [refreshGames, setRefreshGames] = useState(0);
 ```
 
 **Navigation:**
 ```typescript
-const navigateToGame = (gameCode: string) => {
+const navigateToGame = (gameCode: string, gameName: string) => {
   setSelectedGameCode(gameCode);
+  setSelectedGameName(gameName);
   setMainView('game-detail');
 };
 
 const navigateToGames = () => {
   setSelectedGameCode(null);
+  setSelectedGameName(null);
   setMainView('games');
 };
 ```
@@ -481,6 +539,7 @@ const navigateToGames = () => {
 
 ```
 App
+├── AppHeader (all views)
 ├── (Loading)
 ├── (Unauthenticated)
 │   ├── LoginForm

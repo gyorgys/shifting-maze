@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { getGameDetails } from '../services/api';
 import { Game } from '../types/Game';
 import { User } from '../types/User';
-import { GameBoard } from './GameBoard';
+import { GameBoard, TILE_SIZE } from './GameBoard';
+import { Tile } from './Tile';
 
 interface GamePageProps {
   gameCode: string;
   user: User;
-  onBack: () => void;
 }
 
-export function GamePage({ gameCode, user, onBack }: GamePageProps) {
+export function GamePage({ gameCode, user }: GamePageProps) {
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,95 +33,19 @@ export function GamePage({ gameCode, user, onBack }: GamePageProps) {
   }, [gameCode, user.token]);
 
   if (loading) {
-    return (
-      <div style={{ padding: '20px' }}>
-        <button
-          onClick={onBack}
-          style={{
-            padding: '8px 16px',
-            fontSize: '14px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            marginBottom: '20px',
-          }}
-        >
-          ← Back to Games
-        </button>
-        <p>Loading game...</p>
-      </div>
-    );
+    return <p>Loading game...</p>;
   }
 
   if (error) {
-    return (
-      <div style={{ padding: '20px' }}>
-        <button
-          onClick={onBack}
-          style={{
-            padding: '8px 16px',
-            fontSize: '14px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            marginBottom: '20px',
-          }}
-        >
-          ← Back to Games
-        </button>
-        <div style={{ color: 'red' }}>Error: {error}</div>
-      </div>
-    );
+    return <div style={{ color: 'red' }}>Error: {error}</div>;
   }
 
   if (!game) {
-    return (
-      <div style={{ padding: '20px' }}>
-        <button
-          onClick={onBack}
-          style={{
-            padding: '8px 16px',
-            fontSize: '14px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            marginBottom: '20px',
-          }}
-        >
-          ← Back to Games
-        </button>
-        <p>Game not found</p>
-      </div>
-    );
+    return <p>Game not found</p>;
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '20px' }}>
-        <button
-          onClick={onBack}
-          style={{
-            padding: '8px 16px',
-            fontSize: '14px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            marginBottom: '10px',
-          }}
-        >
-          ← Back to Games
-        </button>
-        <h2 style={{ margin: '10px 0' }}>{game.name}</h2>
-        <p style={{ color: '#6c757d', fontSize: '14px', margin: '5px 0' }}>
-          Game Code: <strong>{game.code}</strong>
-        </p>
-      </div>
-
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr auto', gap: '20px' }}>
       {/* Info Panel */}
       <div
         style={{
@@ -129,7 +53,7 @@ export function GamePage({ gameCode, user, onBack }: GamePageProps) {
           border: '1px solid #dee2e6',
           borderRadius: '4px',
           padding: '15px',
-          marginBottom: '20px',
+          alignSelf: 'start',
         }}
       >
         <div style={{ marginBottom: '10px' }}>
@@ -168,17 +92,32 @@ export function GamePage({ gameCode, user, onBack }: GamePageProps) {
       </div>
 
       {/* Game Board */}
-      {game.board && game.tileInPlay !== undefined && game.playerPositions && game.tokenPositions && game.collectedTokens ? (
+      {game.board && game.tileInPlay !== undefined && game.playerPositions && game.tokenPositions ? (
         <GameBoard
           board={game.board}
-          tileInPlay={game.tileInPlay}
           playerPositions={game.playerPositions}
           tokenPositions={game.tokenPositions}
-          collectedTokens={game.collectedTokens}
         />
       ) : (
         <div style={{ padding: '20px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6' }}>
           <p>Game board not available (game may not have started yet)</p>
+        </div>
+      )}
+
+      {/* Tile in Play */}
+      {game.tileInPlay !== undefined && (
+        <div style={{ alignSelf: 'start' }}>
+          <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>
+            Tile in Play:
+          </div>
+          <svg viewBox={`0 0 ${TILE_SIZE} ${TILE_SIZE}`} style={{ border: '1px solid #000', height: 'calc(75vh / 7)', width: 'auto' }}>
+            <Tile
+              tile={game.tileInPlay}
+              x={0}
+              y={0}
+              size={TILE_SIZE}
+            />
+          </svg>
         </div>
       )}
     </div>

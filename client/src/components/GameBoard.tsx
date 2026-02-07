@@ -1,37 +1,33 @@
 import { Tile as TileComponent } from './Tile';
 import { Token } from './Token';
 import { PlayerMarker } from './PlayerMarker';
-import { Tile as TileType, Position, TokenId } from '../types/Game';
+import { Tile as TileType, Position } from '../types/Game';
 import { calculateGridPosition, getItemsAtPosition } from '../utils/gridPositioning';
 
 interface GameBoardProps {
   board: TileType[][];  // 7x7 tile matrix
-  tileInPlay: TileType;
   playerPositions: { [color: string]: Position };
   tokenPositions: { [tokenId: string]: Position };
-  collectedTokens: { [color: string]: TokenId[] };
-  tileSize?: number;
 }
+
+export const TILE_SIZE = 80;
 
 export function GameBoard({
   board,
-  tileInPlay,
   playerPositions,
   tokenPositions,
-  tileSize = 80,
 }: GameBoardProps) {
-  const boardWidth = 7 * tileSize;
-  const boardHeight = 7 * tileSize;
+  const boardSize = 7 * TILE_SIZE;
 
   return (
     <div>
       <svg
-        width={boardWidth}
-        height={boardHeight}
+        viewBox={`0 0 ${boardSize} ${boardSize}`}
         style={{
           border: '2px solid #000',
           display: 'block',
-          margin: '0 auto',
+          height: '75vh',
+          width: 'auto',
         }}
       >
         {/* Render tiles */}
@@ -40,9 +36,9 @@ export function GameBoard({
             <TileComponent
               key={`tile-${rowIdx}-${colIdx}`}
               tile={tile}
-              x={colIdx * tileSize}
-              y={rowIdx * tileSize}
-              size={tileSize}
+              x={colIdx * TILE_SIZE}
+              y={rowIdx * TILE_SIZE}
+              size={TILE_SIZE}
             />
           ))
         )}
@@ -58,17 +54,17 @@ export function GameBoard({
           const gridOffset = calculateGridPosition(
             tokenId,
             allItemsAtPos,
-            tileSize * 0.25
+            TILE_SIZE * 0.25
           );
 
           return (
             <Token
               key={`token-${tokenId}`}
               tokenId={parseInt(tokenId)}
-              x={col * tileSize}
-              y={row * tileSize}
+              x={col * TILE_SIZE}
+              y={row * TILE_SIZE}
               gridOffset={gridOffset}
-              tileSize={tileSize}
+              tileSize={TILE_SIZE}
             />
           );
         })}
@@ -84,36 +80,21 @@ export function GameBoard({
           const gridOffset = calculateGridPosition(
             color,
             allItemsAtPos,
-            tileSize * 0.25
+            TILE_SIZE * 0.25
           );
 
           return (
             <PlayerMarker
               key={`player-${color}`}
               color={color as 'red' | 'green' | 'blue' | 'white'}
-              x={col * tileSize}
-              y={row * tileSize}
+              x={col * TILE_SIZE}
+              y={row * TILE_SIZE}
               gridOffset={gridOffset}
-              tileSize={tileSize}
+              tileSize={TILE_SIZE}
             />
           );
         })}
       </svg>
-
-      {/* Tile in play indicator */}
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>
-          Tile in Play:
-        </div>
-        <svg width={tileSize} height={tileSize} style={{ border: '1px solid #000' }}>
-          <TileComponent
-            tile={tileInPlay}
-            x={0}
-            y={0}
-            size={tileSize}
-          />
-        </svg>
-      </div>
     </div>
   );
 }
