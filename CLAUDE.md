@@ -4,12 +4,39 @@ This file contains instructions for Claude (AI assistant) when working on the Sh
 
 ## Documentation-First Approach
 
+### Rule 0: Game Rules Are the Source of Truth
+
+**⚠️ CRITICAL: For any game-related feature or business logic:**
+
+1. **Always check `docs/game-rules.md` FIRST** before planning or implementing
+2. This file defines:
+   - How the game works (board setup, tiles, tokens)
+   - Turn structure (shift phase, move phase)
+   - Game rules (token collection order, movement constraints, win conditions)
+   - All business logic for the Shifting Maze game
+
+**Why:** The game rules documentation is the authoritative source for business logic. Implementing features without consulting it will result in incorrect game behavior.
+
+**Example:**
+```
+User asks: "Implement token collection when a player moves"
+
+MUST READ FIRST: docs/game-rules.md
+→ Discover: Tokens must be collected in order (lowest value first)
+→ Discover: Only the smallest value token on board is collectible
+→ Implement: Check if landed token is current lowest before collecting
+
+WITHOUT reading game rules:
+→ Might implement: Collect any token player lands on (WRONG!)
+```
+
 ### Rule 1: Check Documentation Before Planning
 
 **When planning new changes or features:**
 
 1. **Always read the relevant documentation first** in the `docs/` directory
 2. Check the following files based on the task:
+   - **`docs/game-rules.md`** - Game business logic (CHECK FIRST for game features)
    - `docs/README.md` - Overall architecture and quick reference
    - `docs/server/models.md` - If working with User or Game data structures
    - `docs/server/api-endpoints.md` - If adding/modifying API endpoints
@@ -49,6 +76,7 @@ Then plan:
    ```
 
 2. **Identify which documentation needs updating:**
+   - Game logic changes → Update `docs/game-rules.md`
    - New/modified models → Update `docs/server/models.md`
    - New/modified API endpoints → Update `docs/server/api-endpoints.md`
    - New/modified components → Update `docs/client/components.md`
@@ -106,6 +134,7 @@ After updating docs:
 
 ### File Organization
 
+- `docs/game-rules.md` - **Game business logic (authoritative source of truth)**
 - `docs/README.md` - Main entry point, architecture, quick start
 - `docs/server/` - All server-side documentation
 - `docs/client/` - All client-side documentation
@@ -208,7 +237,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 
 - Use functional components with hooks
 - Follow existing form patterns (validation, error display, disabled state)
-- Use inline styles consistent with existing components
+- **Use CSS classes from `client/src/styles/main.css`** (NOT inline styles)
 - Call API service functions (don't use fetch directly in components)
 - Update parent state through callbacks
 
@@ -219,8 +248,34 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 - Use proper types, avoid `any`
 - Export types that are used across files
 
+### Shared Code
+
+- **Use `shared/` directory for all types and utilities used by both client and server**
+- Types: Place in `shared/types/` (e.g., Game, Player, Tile, Token types)
+- Utilities: Place in `shared/utils/` (e.g., tile manipulation functions)
+- Both client and server import from `@shared/` alias
+- **Never duplicate types or logic** - if it's used by both sides, it belongs in `shared/`
+
+**Examples:**
+```typescript
+// ✅ GOOD: Shared type in shared/types/game.ts
+export type PlayerColor = 'red' | 'green' | 'blue' | 'white';
+
+// ✅ GOOD: Both import from shared
+// client/src/components/GamePage.tsx
+import { PlayerColor } from '@shared/types';
+
+// server/src/models/Game.ts
+import { PlayerColor } from '@shared/types';
+
+// ❌ BAD: Duplicating type definition
+// client/src/types/Game.ts
+type PlayerColor = 'red' | 'green' | 'blue' | 'white';  // DON'T DO THIS!
+```
+
 ## Quick Reference
 
+**For game features:** Check `docs/game-rules.md` FIRST for business logic
 **Before planning:** Check `docs/` for relevant documentation
 **Before committing:** Update `docs/` to reflect your changes
 **Always:** Follow existing patterns and conventions
