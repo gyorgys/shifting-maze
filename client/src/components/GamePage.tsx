@@ -37,7 +37,7 @@ export function GamePage({ gameCode, user }: GamePageProps) {
   }
 
   if (error) {
-    return <div style={{ color: 'red' }}>Error: {error}</div>;
+    return <div className="text-error">Error: {error}</div>;
   }
 
   if (!game) {
@@ -48,18 +48,10 @@ export function GamePage({ gameCode, user }: GamePageProps) {
   const controlsEnabled = game.currentTurn?.username === user.username && game.currentTurn?.phase === 'shift';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr auto', gap: '20px' }}>
+    <div className="grid-game-page">
       {/* Info Panel */}
-      <div
-        style={{
-          backgroundColor: '#f8f9fa',
-          border: '1px solid #dee2e6',
-          borderRadius: '4px',
-          padding: '15px',
-          alignSelf: 'start',
-        }}
-      >
-        <div style={{ marginBottom: '10px' }}>
+      <div className="card self-start">
+        <div className="mb-10">
           <strong>Stage:</strong> {game.stage}
         </div>
 
@@ -73,15 +65,8 @@ export function GamePage({ gameCode, user }: GamePageProps) {
               return (
                 <li key={player.username}>
                   <span
-                    style={{
-                      display: 'inline-block',
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: '50%',
-                      backgroundColor: player.color,
-                      border: '1px solid black',
-                      marginRight: '8px',
-                    }}
+                    className="player-indicator"
+                    style={{ backgroundColor: player.color }}
                   ></span>
                   <span style={{ fontWeight: isCurrentPlayer ? 'bold' : 'normal' }}>
                     {player.username} ({player.color})
@@ -105,18 +90,18 @@ export function GamePage({ gameCode, user }: GamePageProps) {
           controlsEnabled={controlsEnabled}
         />
       ) : (
-        <div style={{ padding: '20px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6' }}>
+        <div className="card p-20">
           <p>Game board not available (game may not have started yet)</p>
         </div>
       )}
 
       {/* Tile in Play */}
       {game.tileInPlay !== undefined && (
-        <div style={{ alignSelf: 'start' }}>
-          <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>
+        <div className="self-start">
+          <div className="header2 mb-10">
             Tile in Play:
           </div>
-          <svg viewBox={`0 0 ${TILE_SIZE} ${TILE_SIZE}`} style={{ border: '1px solid #000', height: 'calc(75vh / 7)', width: 'auto', display: 'block', margin: '0 auto' }}>
+          <svg viewBox={`0 0 ${TILE_SIZE} ${TILE_SIZE}`} className="svg-tile-in-play">
             <Tile
               tile={game.tileInPlay}
               x={0}
@@ -126,20 +111,11 @@ export function GamePage({ gameCode, user }: GamePageProps) {
           </svg>
 
           {/* Rotation controls */}
-          <div style={{ display: 'flex', gap: '8px', marginTop: '10px', justifyContent: 'center' }}>
+          <div className="flex gap-8 mt-10 justify-center">
             <button
               onClick={() => console.log('Rotate CW')}
               disabled={!controlsEnabled}
-              style={{
-                padding: '12px 16px',
-                fontSize: '28px',
-                backgroundColor: controlsEnabled ? '#17a2b8' : '#ccc',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: controlsEnabled ? 'pointer' : 'not-allowed',
-                lineHeight: 1,
-              }}
+              className="btn btn-icon btn-info"
               title="Rotate Clockwise"
             >
               ↻
@@ -147,16 +123,7 @@ export function GamePage({ gameCode, user }: GamePageProps) {
             <button
               onClick={() => console.log('Rotate CCW')}
               disabled={!controlsEnabled}
-              style={{
-                padding: '12px 16px',
-                fontSize: '28px',
-                backgroundColor: controlsEnabled ? '#17a2b8' : '#ccc',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: controlsEnabled ? 'pointer' : 'not-allowed',
-                lineHeight: 1,
-              }}
+              className="btn btn-icon btn-info"
               title="Rotate Counter-Clockwise"
             >
               ↺

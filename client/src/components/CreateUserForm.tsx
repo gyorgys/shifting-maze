@@ -66,9 +66,9 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: '400px' }}>
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>
+    <form onSubmit={handleSubmit} className="form-container">
+      <div className="form-group">
+        <label htmlFor="username" className="label">
           Username:
         </label>
         <input
@@ -76,14 +76,14 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px' }}
+          className="input"
           disabled={submitting}
         />
-        {errors.username && <div style={{ color: 'red', fontSize: '12px' }}>{errors.username}</div>}
+        {errors.username && <div className="text-supporting color-danger">{errors.username}</div>}
       </div>
 
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="displayName" style={{ display: 'block', marginBottom: '5px' }}>
+      <div className="form-group">
+        <label htmlFor="displayName" className="label">
           Display Name:
         </label>
         <input
@@ -91,16 +91,16 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           type="text"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px' }}
+          className="input"
           disabled={submitting}
         />
         {errors.displayName && (
-          <div style={{ color: 'red', fontSize: '12px' }}>{errors.displayName}</div>
+          <div className="text-supporting color-danger">{errors.displayName}</div>
         )}
       </div>
 
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>
+      <div className="form-group">
+        <label htmlFor="password" className="label">
           Password:
         </label>
         <input
@@ -108,14 +108,14 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px' }}
+          className="input"
           disabled={submitting}
         />
-        {errors.password && <div style={{ color: 'red', fontSize: '12px' }}>{errors.password}</div>}
+        {errors.password && <div className="text-supporting color-danger">{errors.password}</div>}
       </div>
 
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '5px' }}>
+      <div className="form-group">
+        <label htmlFor="confirmPassword" className="label">
           Confirm Password:
         </label>
         <input
@@ -123,29 +123,22 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px' }}
+          className="input"
           disabled={submitting}
         />
         {errors.confirmPassword && (
-          <div style={{ color: 'red', fontSize: '12px' }}>{errors.confirmPassword}</div>
+          <div className="text-supporting color-danger">{errors.confirmPassword}</div>
         )}
       </div>
 
       {errors.api && (
-        <div style={{ color: 'red', marginBottom: '15px', fontSize: '14px' }}>{errors.api}</div>
+        <div className="text-error mb-15">{errors.api}</div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
-        style={{
-          padding: '10px 20px',
-          fontSize: '14px',
-          backgroundColor: submitting ? '#ccc' : '#007bff',
-          color: 'white',
-          border: 'none',
-          cursor: submitting ? 'not-allowed' : 'pointer',
-        }}
+        className="btn btn-md btn-primary"
       >
         {submitting ? 'Creating...' : 'Create Account'}
       </button>

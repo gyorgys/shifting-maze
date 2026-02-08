@@ -35,9 +35,9 @@ export function CreateGameForm({ user, onSuccess }: CreateGameFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: '400px' }}>
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="gameName" style={{ display: 'block', marginBottom: '5px' }}>
+    <form onSubmit={handleSubmit} className="form-container">
+      <div className="form-group">
+        <label htmlFor="gameName" className="label">
           Game Name:
         </label>
         <input
@@ -45,7 +45,7 @@ export function CreateGameForm({ user, onSuccess }: CreateGameFormProps) {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px' }}
+          className="input"
           disabled={submitting}
           placeholder="Enter game name"
           required
@@ -53,20 +53,13 @@ export function CreateGameForm({ user, onSuccess }: CreateGameFormProps) {
       </div>
 
       {error && (
-        <div style={{ color: 'red', marginBottom: '15px', fontSize: '14px' }}>{error}</div>
+        <div className="text-error mb-15">{error}</div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
-        style={{
-          padding: '10px 20px',
-          fontSize: '14px',
-          backgroundColor: submitting ? '#ccc' : '#28a745',
-          color: 'white',
-          border: 'none',
-          cursor: submitting ? 'not-allowed' : 'pointer',
-        }}
+        className="btn btn-md btn-success"
       >
         {submitting ? 'Creating...' : 'Create Game'}
       </button>

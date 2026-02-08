@@ -39,9 +39,9 @@ export function JoinGameForm({ user, onSuccess }: JoinGameFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: '400px' }}>
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="gameCode" style={{ display: 'block', marginBottom: '5px' }}>
+    <form onSubmit={handleSubmit} className="form-container">
+      <div className="form-group">
+        <label htmlFor="gameCode" className="label">
           Game Code:
         </label>
         <input
@@ -49,7 +49,8 @@ export function JoinGameForm({ user, onSuccess }: JoinGameFormProps) {
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          style={{ width: '100%', padding: '8px', fontSize: '14px', textTransform: 'uppercase' }}
+          className="input"
+          style={{ textTransform: 'uppercase' }}
           disabled={submitting}
           placeholder="ABCD"
           maxLength={4}
@@ -58,24 +59,17 @@ export function JoinGameForm({ user, onSuccess }: JoinGameFormProps) {
       </div>
 
       {error && (
-        <div style={{ color: 'red', marginBottom: '15px', fontSize: '14px' }}>{error}</div>
+        <div className="text-error mb-15">{error}</div>
       )}
 
       {success && (
-        <div style={{ color: 'green', marginBottom: '15px', fontSize: '14px' }}>{success}</div>
+        <div className="text-success mb-15">{success}</div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
-        style={{
-          padding: '10px 20px',
-          fontSize: '14px',
-          backgroundColor: submitting ? '#ccc' : '#17a2b8',
-          color: 'white',
-          border: 'none',
-          cursor: submitting ? 'not-allowed' : 'pointer',
-        }}
+        className="btn btn-md btn-info"
       >
         {submitting ? 'Joining...' : 'Join Game'}
       </button>

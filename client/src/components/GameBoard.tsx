@@ -39,11 +39,7 @@ export function GameBoard({
     <div>
       <svg
         viewBox={`${-ARROW_AREA} ${-ARROW_AREA} ${boardSize + 2 * ARROW_AREA} ${boardSize + 2 * ARROW_AREA}`}
-        style={{
-          display: 'block',
-          height: '75vh',
-          width: 'auto',
-        }}
+        className="svg-board"
       >
         {/* Board border */}
         <rect

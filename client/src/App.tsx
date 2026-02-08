@@ -16,15 +16,15 @@ function App() {
 
   if (loading) {
     return (
-      <div style={{ fontFamily: 'Arial, sans-serif' }}>
+      <div>
         <AppHeader />
-        <p style={{ padding: '0 20px' }}>Loading...</p>
+        <p className="px-20">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif' }}>
+    <div>
       <Routes>
         <Route path="/" element={
           user ? (
@@ -52,23 +52,16 @@ function AuthPage({ login }: { login: (user: any) => void }) {
   return (
     <>
       <AppHeader />
-      <div style={{ padding: '0 20px' }}>
+      <div className="px-20">
         {authView === 'login' ? (
           <>
             <h2>Login</h2>
             <LoginForm onSuccess={login} />
-            <p style={{ marginTop: '20px' }}>
+            <p className="mt-20">
               Don't have an account?{' '}
               <button
                 onClick={() => setAuthView('create')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#007bff',
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                }}
+                className="btn-link"
               >
                 Create one
               </button>
@@ -78,18 +71,11 @@ function AuthPage({ login }: { login: (user: any) => void }) {
           <>
             <h2>Create Account</h2>
             <CreateUserForm onSuccess={login} />
-            <p style={{ marginTop: '20px' }}>
+            <p className="mt-20">
               Already have an account?{' '}
               <button
                 onClick={() => setAuthView('login')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#007bff',
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                }}
+                className="btn-link"
               >
                 Login
               </button>
@@ -111,7 +97,7 @@ function HomePage({ user, logout }: { user: any; logout: () => void }) {
   };
 
   const headerContent = (
-    <h2 style={{ margin: 0, fontSize: '18px' }}>Games</h2>
+    <h2 className="subtitle">Games</h2>
   );
 
   return (
@@ -121,7 +107,7 @@ function HomePage({ user, logout }: { user: any; logout: () => void }) {
         username={user.displayName}
         onLogout={logout}
       />
-      <div style={{ padding: '0 20px' }}>
+      <div className="px-20">
         <h2>Create New Game</h2>
         <CreateGameForm
           user={user}
@@ -131,7 +117,7 @@ function HomePage({ user, logout }: { user: any; logout: () => void }) {
           }}
         />
 
-        <hr style={{ margin: '20px 0' }} />
+        <hr className="divider" />
 
         <h2>Join Game</h2>
         <JoinGameForm
@@ -141,7 +127,7 @@ function HomePage({ user, logout }: { user: any; logout: () => void }) {
           }}
         />
 
-        <hr style={{ margin: '20px 0' }} />
+        <hr className="divider" />
 
         <GamesList
           user={user}
@@ -168,24 +154,17 @@ function GameDetailPageWrapper({ user, logout }: { user: any; logout: () => void
 
   // We'll need to fetch the game name for the header, but for now just show the code
   const headerContent = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className="flex items-center gap-10">
       <button
         onClick={navigateToGames}
         title="Back to Games"
-        style={{
-          background: 'none',
-          border: 'none',
-          fontSize: '20px',
-          cursor: 'pointer',
-          padding: '2px 6px',
-          lineHeight: 1,
-        }}
+        className="btn-link title"
       >
         ←
       </button>
       <div>
-        <h2 style={{ margin: 0, fontSize: '18px' }}>Game</h2>
-        <span style={{ fontSize: '12px', color: '#6c757d' }}>{code}</span>
+        <h2 className="subtitle">Game</h2>
+        <span className="text-supporting color-muted">{code}</span>
       </div>
     </div>
   );
@@ -197,7 +176,7 @@ function GameDetailPageWrapper({ user, logout }: { user: any; logout: () => void
         username={user.displayName}
         onLogout={logout}
       />
-      <div style={{ padding: '0 20px' }}>
+      <div className="px-20">
         <GamePage gameCode={code} user={user} />
       </div>
     </>

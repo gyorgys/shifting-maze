@@ -32,9 +32,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: '400px' }}>
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>
+    <form onSubmit={handleSubmit} className="form-container">
+      <div className="form-group">
+        <label htmlFor="username" className="label">
           Username:
         </label>
         <input
@@ -42,14 +42,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px' }}
+          className="input"
           disabled={submitting}
           required
         />
       </div>
 
-      <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>
+      <div className="form-group">
+        <label htmlFor="password" className="label">
           Password:
         </label>
         <input
@@ -57,27 +57,20 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: '8px', fontSize: '14px' }}
+          className="input"
           disabled={submitting}
           required
         />
       </div>
 
       {error && (
-        <div style={{ color: 'red', marginBottom: '15px', fontSize: '14px' }}>{error}</div>
+        <div className="text-error mb-15">{error}</div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
-        style={{
-          padding: '10px 20px',
-          fontSize: '14px',
-          backgroundColor: submitting ? '#ccc' : '#007bff',
-          color: 'white',
-          border: 'none',
-          cursor: submitting ? 'not-allowed' : 'pointer',
-        }}
+        className="btn btn-md btn-primary"
       >
         {submitting ? 'Logging in...' : 'Login'}
       </button>

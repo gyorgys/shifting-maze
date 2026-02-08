@@ -1,0 +1,549 @@
+/* ============================================
+   Shifting Maze - Main Stylesheet
+   ============================================ */
+
+/* ============================================
+   1. RESET & GLOBAL STYLES
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================
+   2. TYPOGRAPHY CLASSES
+   ============================================ */
+
+/* Primary headings */
+.title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.header1 {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.header2 {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.header3 {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0;
+}
+
+/* Body text */
+.text-normal {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.text-emphasized {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.text-supporting {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.text-large {
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.text-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+/* Status text */
+.text-error {
+  font-size: 14px;
+  color: red;
+}
+
+.text-success {
+  font-size: 14px;
+  color: green;
+}
+
+.text-muted {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+/* ============================================
+   3. COLOR UTILITIES
+   ============================================ */
+
+/* Background colors */
+.bg-primary {
+  background-color: #007bff;
+}
+
+.bg-secondary {
+  background-color: #6c757d;
+}
+
+.bg-success {
+  background-color: #28a745;
+}
+
+.bg-info {
+  background-color: #17a2b8;
+}
+
+.bg-danger {
+  background-color: #dc3545;
+}
+
+.bg-light {
+  background-color: #f8f9fa;
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.bg-disabled {
+  background-color: #ccc;
+}
+
+/* Text colors */
+.color-primary {
+  color: #007bff;
+}
+
+.color-success {
+  color: #28a745;
+}
+
+.color-danger {
+  color: #dc3545;
+}
+
+.color-muted {
+  color: #6c757d;
+}
+
+.color-white {
+  color: white;
+}
+
+.color-black {
+  color: black;
+}
+
+/* ============================================
+   4. BUTTON CLASSES
+   ============================================ */
+
+/* Base button */
+.btn {
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Button sizes */
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.btn-md {
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.btn-icon {
+  padding: 12px 16px;
+  font-size: 28px;
+  line-height: 1;
+}
+
+/* Button variants */
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: normal;
+  padding: 0;
+}
+
+/* Button states */
+.btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-loading {
+  cursor: wait;
+}
+
+/* ============================================
+   5. FORM INPUT CLASSES
+   ============================================ */
+
+.input {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.input:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-container {
+  max-width: 400px;
+}
+
+/* ============================================
+   6. CARD/PANEL CLASSES
+   ============================================ */
+
+.card {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.card-compact {
+  padding: 10px;
+}
+
+.card-spacious {
+  padding: 20px;
+}
+
+/* ============================================
+   7. SPACING UTILITIES
+   ============================================ */
+
+/* Margin utilities */
+.m-0 {
+  margin: 0;
+}
+
+.mt-5 {
+  margin-top: 5px;
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+
+.mt-15 {
+  margin-top: 15px;
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+.mb-5 {
+  margin-bottom: 5px;
+}
+
+.mb-10 {
+  margin-bottom: 10px;
+}
+
+.mb-15 {
+  margin-bottom: 15px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.mr-8 {
+  margin-right: 8px;
+}
+
+/* Padding utilities */
+.p-0 {
+  padding: 0;
+}
+
+.p-8 {
+  padding: 8px;
+}
+
+.p-10 {
+  padding: 10px;
+}
+
+.p-15 {
+  padding: 15px;
+}
+
+.p-20 {
+  padding: 20px;
+}
+
+.px-20 {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.py-0 {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ============================================
+   8. LAYOUT UTILITIES
+   ============================================ */
+
+/* Display */
+.flex {
+  display: flex;
+}
+
+.grid {
+  display: grid;
+}
+
+.block {
+  display: block;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+/* Flex utilities */
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.gap-8 {
+  gap: 8px;
+}
+
+.gap-10 {
+  gap: 10px;
+}
+
+.gap-12 {
+  gap: 12px;
+}
+
+.gap-20 {
+  gap: 20px;
+}
+
+/* Sizing */
+.w-full {
+  width: 100%;
+}
+
+.w-auto {
+  width: auto;
+}
+
+.h-auto {
+  height: auto;
+}
+
+/* Positioning */
+.self-start {
+  align-self: start;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* ============================================
+   9. BORDER UTILITIES
+   ============================================ */
+
+.border {
+  border: 1px solid #dee2e6;
+}
+
+.border-dark {
+  border: 1px solid #000;
+}
+
+.border-none {
+  border: none;
+}
+
+.rounded {
+  border-radius: 4px;
+}
+
+.rounded-full {
+  border-radius: 50%;
+}
+
+/* ============================================
+   10. INTERACTIVE STATES
+   ============================================ */
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+.cursor-wait {
+  cursor: wait;
+}
+
+.hover-opacity:hover {
+  opacity: 0.9;
+}
+
+/* ============================================
+   11. SPECIAL COMPONENTS
+   ============================================ */
+
+/* Player color indicator */
+.player-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid black;
+  margin-right: 8px;
+}
+
+/* Divider */
+.divider {
+  margin: 20px 0;
+  border: none;
+  border-top: 1px solid #dee2e6;
+}
+
+/* ============================================
+   12. CUSTOM GRID LAYOUTS
+   ============================================ */
+
+.grid-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.grid-game-page {
+  display: grid;
+  grid-template-columns: 1fr 3fr auto;
+  gap: 20px;
+}
+
+/* ============================================
+   13. SVG SPECIFIC
+   ============================================ */
+
+.svg-board {
+  display: block;
+  height: 75vh;
+  width: auto;
+  margin: 0 auto;
+  border: 1px solid #000;
+}
+
+.svg-tile-in-play {
+  display: block;
+  height: calc(75vh / 7);
+  width: auto;
+  margin: 0 auto;
+  border: 1px solid #000;
+}

@@ -256,6 +256,14 @@ interface GamesListProps {
 - **Start Game:** Available to creator when 2-4 players joined
 - **View Game:** Navigate to game detail page (playing/finished games only)
 
+**Styling:**
+- Uses CSS classes from main.css
+- Game cards use `card` class for consistent appearance
+- Buttons use `btn` classes (btn-primary, btn-secondary, btn-success)
+- Text uses typography classes (header1, text-normal, text-supporting)
+- Layout uses flex utilities (flex, justify-between, items-center, gap-*)
+- Spacing uses margin utilities (mb-10, mb-15, mt-10, mt-15)
+
 **Usage:**
 ```tsx
 const [refreshGames, setRefreshGames] = useState(0);
@@ -289,34 +297,43 @@ Main game view page that displays full game state including the board.
 interface GamePageProps {
   gameCode: string;   // The game code to display
   user: User;         // Current authenticated user
-  onBack: () => void; // Callback to return to games list
 }
 ```
 
 **Features:**
 - Fetches full game details on mount using `getGameDetails` API
 - Loading, error, and not-found states
-- Back button to return to games list
 - Game name and code displayed in AppHeader (via parent App)
-- Info panel showing:
-  - Game stage
-  - Current turn information (for playing games)
-  - Players list with color indicators (current player shown in bold with phase name)
-- Game board rendering (via GameBoard component)
+- Three-column grid layout:
+  1. Info panel (left) showing:
+     - Game stage
+     - Players list with color indicators (current player shown in bold with phase name)
+  2. Game board (center, via GameBoard component)
+  3. Tile in play panel (right) showing:
+     - Current tile in play
+     - Rotation controls (enabled during shift phase for current player)
 - Fallback message if board state is not available
 
 **States:**
 - **Loading:** "Loading game..."
-- **Error:** Error message with back button
+- **Error:** Error message displayed
 - **Not Found:** "Game not found"
 - **Success:** Full game view with board
+
+**Styling:**
+- Uses CSS classes from main.css
+- Layout uses `grid-game-page` class for three-column layout
+- Info and tile-in-play panels use `card` class
+- Player color indicators use `player-indicator` class
+- Rotation buttons use `btn btn-icon btn-info` classes
+- SVG containers use `svg-board` and `svg-tile-in-play` classes
+- Dynamic backgroundColor maintained for player color indicators
 
 **Usage:**
 ```tsx
 <GamePage
   gameCode="WXYZ"
   user={user}
-  onBack={() => setView('games')}
 />
 ```
 
@@ -324,7 +341,7 @@ interface GamePageProps {
 
 ### GameBoard
 
-SVG-based game board renderer showing tiles, tokens, and players.
+SVG-based game board renderer showing tiles, tokens, and players with interactive shift controls.
 
 **File:** [client/src/components/GameBoard.tsx](../../client/src/components/GameBoard.tsx)
 
@@ -332,34 +349,38 @@ SVG-based game board renderer showing tiles, tokens, and players.
 ```typescript
 interface GameBoardProps {
   board: Tile[][];                            // 7x7 tile matrix
-  tileInPlay: Tile;                           // Tile not on board
   playerPositions: { [color: string]: Position };
   tokenPositions: { [tokenId: string]: Position };
-  collectedTokens: { [color: string]: TokenId[] };
-  tileSize?: number;                          // Default: 80px
+  controlsEnabled: boolean;                   // Whether shift controls are active
 }
 ```
 
 **Features:**
 - Renders 7×7 board using SVG
-- Displays tile in play separately below board
+- Shift arrows on rows 1, 3, 5 (top/bottom) and columns 1, 3, 5 (left/right)
+- Arrows enabled/disabled based on `controlsEnabled` prop
 - Handles multiple items on same tile with 2×2 grid layout
-- Configurable tile size (default 80px)
+- Fixed tile size (80px)
 - Black border around board
 
 **Visual Components:**
 - Tiles with paths (via Tile component)
 - Tokens with values (via Token component)
 - Player markers (via PlayerMarker component)
+- Shift control arrows (orange when enabled, gray when disabled)
+
+**Styling:**
+- SVG container uses `svg-board` CSS class
+- Arrow colors change based on `controlsEnabled` (orange/#17a2b8 or gray/#ccc)
+- Cursor changes based on enabled state (pointer or not-allowed)
 
 **Usage:**
 ```tsx
 <GameBoard
   board={game.board}
-  tileInPlay={game.tileInPlay}
   playerPositions={game.playerPositions}
   tokenPositions={game.tokenPositions}
-  collectedTokens={game.collectedTokens}
+  controlsEnabled={currentPlayer && shiftPhase}
 />
 ```
 
@@ -605,14 +626,29 @@ const handleSubmit = async (e: FormEvent) => {
 
 ## Styling
 
-All components use inline styles with consistent patterns:
-- Font family: Arial, sans-serif
-- Padding: 20px for containers, 8px for inputs
-- Colors:
-  - Primary blue: #007bff (login/submit)
-  - Success green: #28a745 (create game)
-  - Info cyan: #17a2b8 (join game)
-  - Danger red: #dc3545 (logout, errors)
-  - Gray: #6c757d (refresh, disabled)
-- Form inputs: 100% width, consistent padding
-- Buttons: Consistent sizing and hover states
+Components use a mix of CSS classes and inline styles:
+
+**CSS Classes (from main.css):**
+- Typography: `title`, `subtitle`, `header1`, `header2`, `text-normal`, `text-emphasized`, `text-supporting`
+- Colors: `color-success`, `color-danger`, `color-muted`, `bg-light`
+- Buttons: `btn`, `btn-sm`, `btn-md`, `btn-icon`, `btn-primary`, `btn-secondary`, `btn-success`, `btn-info`
+- Layout: `flex`, `grid`, `items-center`, `justify-between`, `gap-8`, `gap-10`, `gap-12`, `gap-20`
+- Spacing: `m-0`, `mt-*`, `mb-*`, `p-*`
+- Cards: `card` (consistent panel styling)
+- Forms: `input`, `label`
+- Special: `player-indicator`, `svg-board`, `svg-tile-in-play`, `grid-game-page`
+
+**Inline Styles (when necessary):**
+- Dynamic colors (e.g., player backgroundColor)
+- SVG-specific properties (fill, stroke)
+- Custom grid templates
+- List styling (margin, padding for ul/li)
+
+**Color Palette:**
+- Primary blue: #007bff
+- Success green: #28a745
+- Info cyan: #17a2b8
+- Danger red: #dc3545
+- Secondary gray: #6c757d
+- Light background: #f8f9fa
+- Disabled: #ccc

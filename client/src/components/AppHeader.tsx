@@ -8,42 +8,25 @@ interface AppHeaderProps {
 
 export function AppHeader({ content, username, onLogout }: AppHeaderProps) {
   return (
-    <header
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr auto 1fr',
-        alignItems: 'center',
-        padding: '12px 20px',
-        borderBottom: '1px solid #dee2e6',
-        marginBottom: '20px',
-      }}
-    >
+    <header className="grid-header border mb-20" style={{ padding: '12px 20px', borderTop: 'none', borderLeft: 'none', borderRight: 'none', whiteSpace: 'nowrap' }}>
       {/* Left: App title */}
-      <h1 style={{ margin: 0, fontSize: '20px', whiteSpace: 'nowrap' }}>
+      <h1 className="title" style={{ whiteSpace: 'nowrap' }}>
         Shifting Maze
       </h1>
 
       {/* Center: View-specific content */}
-      <div style={{ textAlign: 'center' }}>
+      <div className="text-center">
         {content}
       </div>
 
       {/* Right: User info + logout */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
+      <div className="flex items-center gap-12 justify-end" style={{ whiteSpace: 'nowrap' }}>
         {username && onLogout && (
           <>
-            <span style={{ fontSize: '14px' }}>{username}</span>
+            <span className="text-normal">{username}</span>
             <button
               onClick={onLogout}
-              style={{
-                padding: '6px 14px',
-                fontSize: '13px',
-                backgroundColor: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              className="btn btn-sm btn-danger"
             >
               Logout
             </button>

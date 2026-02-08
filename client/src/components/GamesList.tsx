@@ -85,23 +85,16 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
   }, [user.username, refresh]);
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>Loading games...</div>;
+    return <div className="p-20">Loading games...</div>;
   }
 
   if (error) {
     return (
-      <div style={{ padding: '20px' }}>
-        <div style={{ color: 'red', marginBottom: '10px' }}>Error: {error}</div>
+      <div className="p-20">
+        <div className="text-error mb-10">Error: {error}</div>
         <button
           onClick={fetchGames}
-          style={{
-            padding: '8px 16px',
-            fontSize: '14px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-          }}
+          className="btn btn-sm btn-secondary"
         >
           Retry
         </button>
@@ -111,26 +104,19 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
 
   if (games.length === 0) {
     return (
-      <div style={{ padding: '20px' }}>
+      <div className="p-20">
         <p>No games yet. Create or join a game to get started!</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-        <h3 style={{ margin: 0 }}>Your Games</h3>
+    <div className="p-20">
+      <div className="flex justify-between items-center mb-15">
+        <h3 className="subtitle m-0">Your Games</h3>
         <button
           onClick={fetchGames}
-          style={{
-            padding: '8px 16px',
-            fontSize: '14px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-          }}
+          className="btn btn-sm btn-secondary"
         >
           Refresh
         </button>
@@ -144,32 +130,26 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
           return (
             <li
               key={game.code}
-              style={{
-                padding: '15px',
-                marginBottom: '10px',
-                backgroundColor: '#f8f9fa',
-                border: '1px solid #dee2e6',
-                borderRadius: '4px',
-              }}
+              className="card mb-10"
             >
-              <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '5px' }}>
+              <div className="header1 mb-5">
                 {game.name}
               </div>
-              <div style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>
+              <div className="text-supporting color-muted mb-10">
                 Code: <strong>{game.code}</strong> • {game.userCount} player{game.userCount !== 1 ? 's' : ''} • Stage: <strong>{game.stage}</strong>
               </div>
 
               {/* Show current turn info if game is playing */}
               {game.currentTurn && (
-                <div style={{ fontSize: '14px', color: '#28a745', marginBottom: '8px' }}>
+                <div className="text-normal color-success mb-10">
                   Current turn: <strong>{game.currentTurn.username}</strong> ({game.currentTurn.color}) - {game.currentTurn.phase} phase
                 </div>
               )}
 
               {/* Show color selector for unstarted games where user is a player */}
               {canChangeColor && (
-                <div style={{ marginTop: '10px' }}>
-                  <label style={{ fontSize: '14px', marginRight: '8px' }}>
+                <div className="mt-10">
+                  <label className="text-normal mr-8">
                     Your color:
                   </label>
                   <select
@@ -177,14 +157,7 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
                     onChange={(e) => handleColorChange(game.code, e.target.value as PlayerColor)}
                     onFocus={() => handleDropdownFocus(game.code)}
                     disabled={updatingColor === game.code}
-                    style={{
-                      padding: '6px 10px',
-                      fontSize: '14px',
-                      border: '1px solid #ced4da',
-                      borderRadius: '4px',
-                      backgroundColor: 'white',
-                      cursor: updatingColor === game.code ? 'wait' : 'pointer',
-                    }}
+                    className={updatingColor === game.code ? 'input cursor-wait' : 'input'}
                   >
                     <option value={currentColor}>{currentColor}</option>
                     {availableColors.map(color => (
@@ -192,7 +165,7 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
                     ))}
                   </select>
                   {updatingColor === game.code && (
-                    <span style={{ marginLeft: '8px', fontSize: '14px', color: '#6c757d' }}>
+                    <span className="text-supporting color-muted" style={{ marginLeft: '8px' }}>
                       Updating...
                     </span>
                   )}
@@ -201,7 +174,7 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
 
               {/* Show players list */}
               {game.players.length > 0 && (
-                <div style={{ marginTop: '10px', fontSize: '14px' }}>
+                <div className="mt-10 text-normal">
                   <strong>Players:</strong>
                   <ul style={{ margin: '5px 0 0 0', padding: '0 0 0 20px' }}>
                     {game.players.map(player => (
@@ -215,29 +188,20 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
 
               {/* Show Start Game button for creator of unstarted games */}
               {isGameCreator(game) && (
-                <div style={{ marginTop: '15px' }}>
+                <div className="mt-15">
                   <button
                     onClick={() => handleStartGame(game.code)}
                     disabled={startingGame === game.code || !hasEnoughPlayers(game)}
-                    style={{
-                      padding: '10px 20px',
-                      fontSize: '14px',
-                      backgroundColor: (startingGame === game.code || !hasEnoughPlayers(game)) ? '#ccc' : '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: (startingGame === game.code || !hasEnoughPlayers(game)) ? 'not-allowed' : 'pointer',
-                      fontWeight: 'bold',
-                    }}
+                    className="btn btn-md btn-success"
                   >
                     {startingGame === game.code ? 'Starting...' : 'Start Game'}
                   </button>
                   {!hasEnoughPlayers(game) ? (
-                    <span style={{ marginLeft: '10px', fontSize: '14px', color: '#dc3545' }}>
+                    <span className="text-normal color-danger" style={{ marginLeft: '10px' }}>
                       Need at least 2 players to start
                     </span>
                   ) : game.players.length < 4 && (
-                    <span style={{ marginLeft: '10px', fontSize: '14px', color: '#6c757d' }}>
+                    <span className="text-supporting color-muted" style={{ marginLeft: '10px' }}>
                       (Waiting for more players is optional)
                     </span>
                   )}
@@ -246,19 +210,10 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
 
               {/* Show View Game button for playing/finished games */}
               {game.stage !== 'unstarted' && onViewGame && (
-                <div style={{ marginTop: '15px' }}>
+                <div className="mt-15">
                   <button
                     onClick={() => onViewGame(game.code)}
-                    style={{
-                      padding: '10px 20px',
-                      fontSize: '14px',
-                      backgroundColor: '#007bff',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                    }}
+                    className="btn btn-md btn-primary"
                   >
                     View Game
                   </button>
