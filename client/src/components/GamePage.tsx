@@ -63,12 +63,6 @@ export function GamePage({ gameCode, user }: GamePageProps) {
           <strong>Stage:</strong> {game.stage}
         </div>
 
-        {/* Current turn info */}
-        {game.currentTurn && (
-          <div style={{ marginBottom: '10px', color: '#28a745' }}>
-            <strong>Current Turn:</strong> {game.currentTurn.username} ({game.currentTurn.color}) - {game.currentTurn.phase} phase
-          </div>
-        )}
 
         {/* Players list */}
         <div>
@@ -92,7 +86,7 @@ export function GamePage({ gameCode, user }: GamePageProps) {
                   <span style={{ fontWeight: isCurrentPlayer ? 'bold' : 'normal' }}>
                     {player.username} ({player.color})
                     {isCurrentPlayer && game.currentTurn && (
-                      <span> - {game.currentTurn.phase} phase</span>
+                      <span> - {game.currentTurn.phase}</span>
                     )}
                   </span>
                 </li>
