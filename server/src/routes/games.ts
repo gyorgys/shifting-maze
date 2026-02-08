@@ -104,8 +104,42 @@ router.get('/:code', authenticateToken, async (req: Request, res: Response): Pro
       return;
     }
 
-    // Return full game state
-    res.status(200).json(game);
+    // Format response with currentTurn if game is playing
+    const response: any = {
+      code: game.code,
+      name: game.name,
+      createdBy: game.createdBy,
+      userCount: game.players.length,
+      stage: game.stage,
+      players: game.players,
+    };
+
+    // Add available colors if game can be joined (unstarted and not full)
+    if (game.stage === 'unstarted' && game.players.length < game.maxPlayers) {
+      const allColors: PlayerColor[] = ['red', 'green', 'blue', 'white'];
+      const takenColors = game.players.map(p => p.color);
+      const availableColors = allColors.filter(color => !takenColors.includes(color));
+      response.availableColors = availableColors;
+    }
+
+    // Add current turn info if game is playing
+    if (game.stage === 'playing' && game.currentPlayerIndex !== undefined && game.currentPhase) {
+      const currentPlayer = game.players[game.currentPlayerIndex];
+      response.currentTurn = {
+        username: currentPlayer.username,
+        color: currentPlayer.color,
+        phase: game.currentPhase,
+      };
+    }
+
+    // Add board state if present
+    if (game.board) response.board = game.board;
+    if (game.tileInPlay !== undefined) response.tileInPlay = game.tileInPlay;
+    if (game.playerPositions) response.playerPositions = game.playerPositions;
+    if (game.tokenPositions) response.tokenPositions = game.tokenPositions;
+    if (game.collectedTokens) response.collectedTokens = game.collectedTokens;
+
+    res.status(200).json(response);
   } catch (error) {
     console.error('Error getting game:', error);
     res.status(500).json({ error: 'Internal server error' });

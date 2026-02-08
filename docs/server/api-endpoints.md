@@ -322,15 +322,18 @@ Authorization: Bearer <your-jwt-token>
   "code": "WXYZ",
   "name": "Active Game",
   "createdBy": "alice",
-  "maxPlayers": 4,
+  "userCount": 3,
   "stage": "playing",
   "players": [
     { "username": "alice", "color": "blue" },
     { "username": "bob", "color": "red" },
     { "username": "charlie", "color": "green" }
   ],
-  "currentPlayerIndex": 0,
-  "currentPhase": "move",
+  "currentTurn": {
+    "username": "alice",
+    "color": "blue",
+    "phase": "move"
+  },
   "board": [
     [10, 3, 11, 3, 11, 3, 9],
     // ... 7x7 matrix of tile bitmasks
@@ -358,11 +361,14 @@ Authorization: Bearer <your-jwt-token>
 - `code` - Game code
 - `name` - Game name
 - `createdBy` - Username of game creator
-- `maxPlayers` - Maximum players (always 4)
+- `userCount` - Number of players in the game
 - `stage` - Game stage: "unstarted", "playing", or "finished"
 - `players` - Array of players with usernames and colors
-- `currentPlayerIndex` - (playing games only) Index of current player in players array
-- `currentPhase` - (playing games only) Current turn phase ("shift" or "move")
+- `availableColors` - (unstarted games only) Array of colors that can be chosen
+- `currentTurn` - (playing games only) Object with:
+  - `username` - Current player's username
+  - `color` - Current player's color
+  - `phase` - Current turn phase ("shift" or "move")
 - `board` - (playing/finished games only) 7x7 matrix of tile bitmasks (0-15)
 - `tileInPlay` - (playing/finished games only) The tile not currently on the board
 - `playerPositions` - (playing/finished games only) Map of color to [row, col] position
