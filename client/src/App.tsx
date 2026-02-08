@@ -143,6 +143,7 @@ function HomePage({ user, logout }: { user: any; logout: () => void }) {
 function GameDetailPageWrapper({ user, logout }: { user: any; logout: () => void }) {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
+  const [gameName, setGameName] = useState<string | null>(null);
 
   if (!code) {
     return <Navigate to="/" replace />;
@@ -152,7 +153,6 @@ function GameDetailPageWrapper({ user, logout }: { user: any; logout: () => void
     navigate('/');
   };
 
-  // We'll need to fetch the game name for the header, but for now just show the code
   const headerContent = (
     <div className="flex items-center gap-10">
       <button
@@ -163,7 +163,7 @@ function GameDetailPageWrapper({ user, logout }: { user: any; logout: () => void
         ←
       </button>
       <div>
-        <h2 className="subtitle">Game</h2>
+        <h2 className="subtitle">{gameName || 'Game'}</h2>
         <span className="text-supporting color-muted">{code}</span>
       </div>
     </div>
@@ -177,7 +177,7 @@ function GameDetailPageWrapper({ user, logout }: { user: any; logout: () => void
         onLogout={logout}
       />
       <div className="px-20">
-        <GamePage gameCode={code} user={user} />
+        <GamePage gameCode={code} user={user} onGameLoaded={setGameName} />
       </div>
     </>
   );

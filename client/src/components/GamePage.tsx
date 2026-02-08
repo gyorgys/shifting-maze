@@ -8,9 +8,10 @@ import { Tile } from './Tile';
 interface GamePageProps {
   gameCode: string;
   user: User;
+  onGameLoaded?: (gameName: string) => void;
 }
 
-export function GamePage({ gameCode, user }: GamePageProps) {
+export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +23,10 @@ export function GamePage({ gameCode, user }: GamePageProps) {
       try {
         const gameData = await getGameDetails(gameCode, user.token);
         setGame(gameData);
+        // Notify parent of game name for header
+        if (onGameLoaded) {
+          onGameLoaded(gameData.name);
+        }
       } catch (error) {
         setError((error as Error).message);
       } finally {
@@ -30,7 +35,7 @@ export function GamePage({ gameCode, user }: GamePageProps) {
     }
 
     loadGame();
-  }, [gameCode, user.token]);
+  }, [gameCode, user.token, onGameLoaded]);
 
   if (loading) {
     return <p>Loading game...</p>;
