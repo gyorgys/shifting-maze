@@ -1,4 +1,5 @@
 import { Tile as TileType } from '../types/Game';
+import { LEFT, RIGHT, TOP, BOTTOM } from '@shared/utils/tileUtils';
 
 interface TileProps {
   tile: TileType;  // Bitmask 0-15
@@ -6,12 +7,6 @@ interface TileProps {
   y: number;
   size?: number;
 }
-
-// Tile bitmask constants
-const LEFT = 0x1;    // Bit 0
-const RIGHT = 0x2;   // Bit 1
-const TOP = 0x4;     // Bit 2
-const BOTTOM = 0x8;  // Bit 3
 
 export function Tile({ tile, x, y, size = 80 }: TileProps) {
   const PATH_WIDTH = size * (2/5);  // 2/5 of tile (32px for 80px tile)

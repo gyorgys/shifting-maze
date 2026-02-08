@@ -4,46 +4,7 @@ import { Game, Tile as TileType } from '../types/Game';
 import { User } from '../types/User';
 import { GameBoard, TILE_SIZE } from './GameBoard';
 import { Tile } from './Tile';
-
-// Tile bitmask constants
-const LEFT = 0x1;    // Bit 0
-const RIGHT = 0x2;   // Bit 1
-const TOP = 0x4;     // Bit 2
-const BOTTOM = 0x8;  // Bit 3
-
-// Rotate tile clockwise
-function rotateTileClockwise(tile: TileType): TileType {
-  const hasLeft = !!(tile & LEFT);
-  const hasRight = !!(tile & RIGHT);
-  const hasTop = !!(tile & TOP);
-  const hasBottom = !!(tile & BOTTOM);
-
-  // CW rotation: LEFT->TOP, TOP->RIGHT, RIGHT->BOTTOM, BOTTOM->LEFT
-  let rotated = 0;
-  if (hasLeft) rotated |= TOP;
-  if (hasTop) rotated |= RIGHT;
-  if (hasRight) rotated |= BOTTOM;
-  if (hasBottom) rotated |= LEFT;
-
-  return rotated;
-}
-
-// Rotate tile counter-clockwise
-function rotateTileCounterClockwise(tile: TileType): TileType {
-  const hasLeft = !!(tile & LEFT);
-  const hasRight = !!(tile & RIGHT);
-  const hasTop = !!(tile & TOP);
-  const hasBottom = !!(tile & BOTTOM);
-
-  // CCW rotation: LEFT->BOTTOM, BOTTOM->RIGHT, RIGHT->TOP, TOP->LEFT
-  let rotated = 0;
-  if (hasLeft) rotated |= BOTTOM;
-  if (hasBottom) rotated |= RIGHT;
-  if (hasRight) rotated |= TOP;
-  if (hasTop) rotated |= LEFT;
-
-  return rotated;
-}
+import { rotateTileClockwise, rotateTileCounterClockwise } from '@shared/utils/tileUtils';
 
 interface GamePageProps {
   gameCode: string;

@@ -1,27 +1,28 @@
-// Player colors available in the game
-export type PlayerColor = 'red' | 'green' | 'blue' | 'white';
+// Import shared types
+import type {
+  PlayerColor,
+  GameStage,
+  TurnPhase,
+  Position,
+  Tile,
+  TokenId,
+  Player,
+  CurrentTurn,
+} from '@shared/types';
 
-// Game stages
-export type GameStage = 'unstarted' | 'playing' | 'finished';
+// Re-export shared types for convenience
+export type {
+  PlayerColor,
+  GameStage,
+  TurnPhase,
+  Position,
+  Tile,
+  TokenId,
+  Player,
+  CurrentTurn,
+};
 
-// Turn phases - each turn has two phases
-export type TurnPhase = 'shift' | 'move';
-
-// Board position coordinates [row, col]
-export type Position = [number, number];
-
-// Tile representation (0-15, 4-bit bitmask for L/R/T/B sides)
-export type Tile = number;
-
-// Token identifier (0-20)
-export type TokenId = number;
-
-// Player in a game
-export interface Player {
-  username: string;
-  color: PlayerColor;
-}
-
+// Server-specific Game interface (stored in database)
 export interface Game {
   code: string;
   name: string;
@@ -47,6 +48,7 @@ export interface Game {
   collectedTokens?: { [color: string]: TokenId[] }; // Map of player color to collected token IDs
 }
 
+// API Request/Response types
 export interface CreateGameRequest {
   name: string;
   // createdBy comes from authenticated user
@@ -69,11 +71,7 @@ export interface ListGamesResponse {
     availableColors?: PlayerColor[];
 
     // Current turn info if game is in progress (stage is 'playing')
-    currentTurn?: {
-      username: string;
-      color: PlayerColor;
-      phase: TurnPhase;
-    };
+    currentTurn?: CurrentTurn;
   }>;
 }
 

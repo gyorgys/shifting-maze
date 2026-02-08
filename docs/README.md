@@ -37,6 +37,13 @@ Shifting Maze is a web application that allows users to create accounts, authent
 │  - server/data/users/*.json         │
 │  - server/data/games/*.json         │
 └─────────────────────────────────────┘
+
+        ┌───────────────────────┐
+        │   Shared Utilities    │
+        │  - Tile Manipulation  │
+        │  - Constants          │
+        │  (Used by both)       │
+        └───────────────────────┘
 ```
 
 ## Documentation Index
@@ -51,6 +58,10 @@ Shifting Maze is a web application that allows users to create accounts, authent
 - **[Components](./client/components.md)** - React component reference
 - **[Types](./client/types.md)** - TypeScript type definitions
 - **[Utilities](./client/utils.md)** - Utility functions and helpers
+
+### Shared Code
+
+- **[Shared README](../shared/README.md)** - Utilities and types shared between client and server
 
 ## Quick Start
 
@@ -251,9 +262,16 @@ server/data/
 - **Framework:** React 18
 - **Language:** TypeScript (strict mode)
 - **Build Tool:** Vite
-- **Styling:** Inline CSS
+- **Styling:** CSS utility classes (main.css)
 - **State Management:** React hooks (useState, useEffect)
 - **HTTP Client:** Fetch API
+- **Routing:** React Router v6
+
+### Shared
+
+- **Utilities:** Tile manipulation functions
+- **Constants:** Tile bitmask definitions (LEFT, RIGHT, TOP, BOTTOM)
+- **Type Safety:** TypeScript path mappings for `@shared` imports
 
 ## Security Considerations
 
@@ -337,6 +355,7 @@ shifting_maze/
 │   │   ├── components/      # React components
 │   │   ├── hooks/          # Custom React hooks
 │   │   ├── services/       # API client
+│   │   ├── styles/         # CSS stylesheets
 │   │   ├── types/          # TypeScript types
 │   │   ├── App.tsx         # Root component
 │   │   └── main.tsx        # Entry point
@@ -353,6 +372,10 @@ shifting_maze/
 │   │   ├── users/
 │   │   └── games/
 │   └── package.json
+├── shared/                 # Code shared between client and server
+│   ├── utils/             # Shared utility functions
+│   │   └── tileUtils.ts   # Tile manipulation
+│   └── types/             # Shared type definitions (planned)
 └── docs/                   # Documentation
     ├── server/
     └── client/

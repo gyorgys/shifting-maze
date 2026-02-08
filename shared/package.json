@@ -1,0 +1,7 @@
+{
+  "name": "shifting-maze-shared",
+  "version": "1.0.0",
+  "description": "Shared utilities and types for Shifting Maze game",
+  "main": "index.ts",
+  "types": "index.ts"
+}
