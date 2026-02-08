@@ -48,6 +48,10 @@ Shifting Maze is a web application that allows users to create accounts, authent
 
 ## Documentation Index
 
+### Game Rules
+
+- **[Game Rules](./game-rules.md)** - Complete game rules and business logic
+
 ### Shared Code
 
 - **[Shared Types & Utilities](./shared/README.md)** - Types and utilities shared between client and server
