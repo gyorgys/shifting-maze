@@ -44,6 +44,9 @@ export function GamePage({ gameCode, user }: GamePageProps) {
     return <p>Game not found</p>;
   }
 
+  // Controls are only enabled during shift phase for the current player
+  const controlsEnabled = game.currentTurn?.username === user.username && game.currentTurn?.phase === 'shift';
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr auto', gap: '20px' }}>
       {/* Info Panel */}
@@ -71,22 +74,30 @@ export function GamePage({ gameCode, user }: GamePageProps) {
         <div>
           <strong>Players:</strong>
           <ul style={{ margin: '5px 0 0 0', padding: '0 0 0 20px' }}>
-            {game.players.map(player => (
-              <li key={player.username}>
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: '12px',
-                    height: '12px',
-                    borderRadius: '50%',
-                    backgroundColor: player.color,
-                    border: '1px solid black',
-                    marginRight: '8px',
-                  }}
-                ></span>
-                {player.username} ({player.color})
-              </li>
-            ))}
+            {game.players.map(player => {
+              const isCurrentPlayer = game.currentTurn?.username === player.username;
+              return (
+                <li key={player.username}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      backgroundColor: player.color,
+                      border: '1px solid black',
+                      marginRight: '8px',
+                    }}
+                  ></span>
+                  <span style={{ fontWeight: isCurrentPlayer ? 'bold' : 'normal' }}>
+                    {player.username} ({player.color})
+                    {isCurrentPlayer && game.currentTurn && (
+                      <span> - {game.currentTurn.phase} phase</span>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
@@ -97,6 +108,7 @@ export function GamePage({ gameCode, user }: GamePageProps) {
           board={game.board}
           playerPositions={game.playerPositions}
           tokenPositions={game.tokenPositions}
+          controlsEnabled={controlsEnabled}
         />
       ) : (
         <div style={{ padding: '20px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6' }}>
@@ -123,14 +135,15 @@ export function GamePage({ gameCode, user }: GamePageProps) {
           <div style={{ display: 'flex', gap: '8px', marginTop: '10px', justifyContent: 'center' }}>
             <button
               onClick={() => console.log('Rotate CW')}
+              disabled={!controlsEnabled}
               style={{
                 padding: '12px 16px',
                 fontSize: '28px',
-                backgroundColor: '#17a2b8',
+                backgroundColor: controlsEnabled ? '#17a2b8' : '#ccc',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
-                cursor: 'pointer',
+                cursor: controlsEnabled ? 'pointer' : 'not-allowed',
                 lineHeight: 1,
               }}
               title="Rotate Clockwise"
@@ -139,14 +152,15 @@ export function GamePage({ gameCode, user }: GamePageProps) {
             </button>
             <button
               onClick={() => console.log('Rotate CCW')}
+              disabled={!controlsEnabled}
               style={{
                 padding: '12px 16px',
                 fontSize: '28px',
-                backgroundColor: '#17a2b8',
+                backgroundColor: controlsEnabled ? '#17a2b8' : '#ccc',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
-                cursor: 'pointer',
+                cursor: controlsEnabled ? 'pointer' : 'not-allowed',
                 lineHeight: 1,
               }}
               title="Rotate Counter-Clockwise"

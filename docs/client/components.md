@@ -300,7 +300,7 @@ interface GamePageProps {
 - Info panel showing:
   - Game stage
   - Current turn information (for playing games)
-  - Players list with color indicators
+  - Players list with color indicators (current player shown in bold with phase name)
 - Game board rendering (via GameBoard component)
 - Fallback message if board state is not available
 

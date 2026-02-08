@@ -8,6 +8,7 @@ interface GameBoardProps {
   board: TileType[][];  // 7x7 tile matrix
   playerPositions: { [color: string]: Position };
   tokenPositions: { [tokenId: string]: Position };
+  controlsEnabled: boolean;  // Whether shift controls are active
 }
 
 export const TILE_SIZE = 80;
@@ -21,6 +22,7 @@ export function GameBoard({
   board,
   playerPositions,
   tokenPositions,
+  controlsEnabled,
 }: GameBoardProps) {
   const boardSize = 7 * TILE_SIZE;
   const shiftableIndices = [1, 3, 5]; // Rows/columns that can be shifted
@@ -67,11 +69,11 @@ export function GameBoard({
                   ${-ARROW_GAP - ARROW_LENGTH},${rowCenterY - ARROW_WIDTH / 2}
                   ${-ARROW_GAP - ARROW_LENGTH},${rowCenterY + ARROW_WIDTH / 2}
                 `}
-                fill="orange"
+                fill={controlsEnabled ? 'orange' : '#ccc'}
                 stroke="#000"
                 strokeWidth="1"
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleShiftRow(rowIdx, 'right')}
+                style={{ cursor: controlsEnabled ? 'pointer' : 'not-allowed' }}
+                onClick={controlsEnabled ? () => handleShiftRow(rowIdx, 'right') : undefined}
               />
               {/* Right arrow - pointing left */}
               <polygon
@@ -80,11 +82,11 @@ export function GameBoard({
                   ${boardSize + ARROW_GAP + ARROW_LENGTH},${rowCenterY - ARROW_WIDTH / 2}
                   ${boardSize + ARROW_GAP + ARROW_LENGTH},${rowCenterY + ARROW_WIDTH / 2}
                 `}
-                fill="orange"
+                fill={controlsEnabled ? 'orange' : '#ccc'}
                 stroke="#000"
                 strokeWidth="1"
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleShiftRow(rowIdx, 'left')}
+                style={{ cursor: controlsEnabled ? 'pointer' : 'not-allowed' }}
+                onClick={controlsEnabled ? () => handleShiftRow(rowIdx, 'left') : undefined}
               />
             </g>
           );
@@ -103,11 +105,11 @@ export function GameBoard({
                   ${colCenterX - ARROW_WIDTH / 2},${-ARROW_GAP - ARROW_LENGTH}
                   ${colCenterX + ARROW_WIDTH / 2},${-ARROW_GAP - ARROW_LENGTH}
                 `}
-                fill="orange"
+                fill={controlsEnabled ? 'orange' : '#ccc'}
                 stroke="#000"
                 strokeWidth="1"
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleShiftColumn(colIdx, 'down')}
+                style={{ cursor: controlsEnabled ? 'pointer' : 'not-allowed' }}
+                onClick={controlsEnabled ? () => handleShiftColumn(colIdx, 'down') : undefined}
               />
               {/* Bottom arrow - pointing up */}
               <polygon
@@ -116,11 +118,11 @@ export function GameBoard({
                   ${colCenterX - ARROW_WIDTH / 2},${boardSize + ARROW_GAP + ARROW_LENGTH}
                   ${colCenterX + ARROW_WIDTH / 2},${boardSize + ARROW_GAP + ARROW_LENGTH}
                 `}
-                fill="orange"
+                fill={controlsEnabled ? 'orange' : '#ccc'}
                 stroke="#000"
                 strokeWidth="1"
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleShiftColumn(colIdx, 'up')}
+                style={{ cursor: controlsEnabled ? 'pointer' : 'not-allowed' }}
+                onClick={controlsEnabled ? () => handleShiftColumn(colIdx, 'up') : undefined}
               />
             </g>
           );
