@@ -6,9 +6,10 @@ interface TileProps {
   x: number;
   y: number;
   size?: number;
+  rotation?: number;  // Rotation angle in degrees (default: 0)
 }
 
-export function Tile({ tile, x, y, size = 80 }: TileProps) {
+export function Tile({ tile, x, y, size = 80, rotation = 0 }: TileProps) {
   const PATH_WIDTH = size * (2/5);  // 2/5 of tile (32px for 80px tile)
   const PATH_HALF = PATH_WIDTH / 2;
   const CENTER = size / 2;
@@ -61,7 +62,10 @@ export function Tile({ tile, x, y, size = 80 }: TileProps) {
   }
 
   return (
-    <g transform={`translate(${x}, ${y})`}>
+    <g
+      className="tile-rotatable"
+      transform={`translate(${x}, ${y}) rotate(${rotation}, ${size/2}, ${size/2})`}
+    >
       {/* Brown background */}
       <rect
         width={size}

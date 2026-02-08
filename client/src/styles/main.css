@@ -593,3 +593,8 @@ body {
   margin: 0 auto;
   border: 1px solid #000;
 }
+
+/* Tile rotation animation - only active when wrapped in tile-animating */
+.tile-animating .tile-rotatable {
+  transition: transform 300ms ease-in-out;
+}

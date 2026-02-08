@@ -310,9 +310,15 @@ interface GamePageProps {
      - Players list with color indicators (current player shown in bold with phase name)
   2. Game board (center, via GameBoard component)
   3. Tile in play panel (right) showing:
-     - Current tile in play
+     - Current tile in play with animated rotation
      - Rotation controls (enabled during shift phase for current player)
 - Fallback message if board state is not available
+- **Rotation Animation:**
+  - Maintains `rotationAngle` state (in degrees) separate from tile bitmask data
+  - Visual rotation (CSS transform) animates smoothly over 300ms
+  - Data rotation (bitmask) updates immediately for correct game state
+  - Rotation angle accumulates (doesn't wrap to 0-360) for smooth continuous rotation
+  - Resets to 0° when new tile appears
 
 **States:**
 - **Loading:** "Loading game..."
@@ -395,10 +401,11 @@ SVG component rendering a single maze tile with paths.
 **Props:**
 ```typescript
 interface TileProps {
-  tile: Tile;    // Bitmask 0-15 (LEFT=0x1, RIGHT=0x2, TOP=0x4, BOTTOM=0x8)
-  x: number;     // X position in SVG
-  y: number;     // Y position in SVG
-  size?: number; // Tile size (default: 80px)
+  tile: Tile;       // Bitmask 0-15 (LEFT=0x1, RIGHT=0x2, TOP=0x4, BOTTOM=0x8)
+  x: number;        // X position in SVG
+  y: number;        // Y position in SVG
+  size?: number;    // Tile size (default: 80px)
+  rotation?: number; // Rotation angle in degrees (default: 0)
 }
 ```
 
@@ -409,6 +416,10 @@ interface TileProps {
 - Black 1px outline
 - Paths connect open sides to center
 - Center square always present
+- **Rotation Animation:** When rotation prop changes, tile smoothly rotates over 300ms using CSS transitions
+  - Rotation is applied around the tile's center point
+  - CSS class `tile-rotatable` provides the transition effect
+  - Rotation angle can accumulate (0→90→180→270→360→...) for smooth multi-rotation
 
 **Tile Bitmask:**
 ```
@@ -423,6 +434,18 @@ BOTTOM = 0x8 (Bit 3)
 - 0xC (TOP | BOTTOM) = straight vertical path
 - 0xA (RIGHT | BOTTOM) = corner path
 - 0xB (LEFT | RIGHT | BOTTOM) = T-junction
+
+**Example Usage:**
+```typescript
+// Static tile (no rotation)
+<Tile tile={10} x={0} y={0} size={80} />
+
+// Animated rotating tile
+const [angle, setAngle] = useState(0);
+<Tile tile={10} x={0} y={0} size={80} rotation={angle} />
+// Changing angle state triggers 300ms smooth rotation
+setAngle(prev => prev + 90); // Rotates 90° clockwise
+```
 
 ---
 

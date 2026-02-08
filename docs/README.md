@@ -100,6 +100,115 @@ npm run dev
 ```
 Client runs on http://localhost:5173
 
+### Production Deployment
+
+In production, you don't need a separate client service. The Vite dev server is only for development.
+
+**Why separate services in development?**
+
+The Vite dev server (port 5173) provides:
+- Hot Module Replacement (HMR) - instant updates without page reload
+- TypeScript transpilation on-the-fly
+- JSX transformation
+- Fast rebuilds and source maps
+- API proxying to the backend
+
+**Production Build:**
+
+```bash
+# 1. Build the client into static files
+cd client
+npm run build
+# Creates optimized HTML/CSS/JS in client/dist/
+
+# 2. Build the server
+cd ../server
+npm run build
+# Compiles TypeScript to JavaScript in server/dist/
+```
+
+**Deployment Options:**
+
+**Option 1: Serve static files from Express**
+
+Modify `server/src/index.ts` to serve the built client files:
+
+```typescript
+import express from 'express';
+import path from 'path';
+
+const app = express();
+
+// ... existing middleware and routes ...
+
+// Serve static files from client/dist
+app.use(express.static(path.join(__dirname, '../../client/dist')));
+
+// Fallback to index.html for client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+});
+
+app.listen(3001, () => {
+  console.log('Server running on http://localhost:3001');
+});
+```
+
+Then run only the server:
+```bash
+cd server
+npm start
+# Everything served from http://localhost:3001
+```
+
+**Option 2: CDN/Static Hosting**
+
+Upload `client/dist/` to a static hosting service:
+- Netlify
+- Vercel
+- Cloudflare Pages
+- AWS S3 + CloudFront
+- GitHub Pages
+
+Update the client's API base URL to point to your server's production URL.
+
+**Option 3: Docker**
+
+```dockerfile
+# Dockerfile
+FROM node:18-alpine
+
+# Build client
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm install
+COPY client/ ./
+RUN npm run build
+
+# Build server
+WORKDIR /app/server
+COPY server/package*.json ./
+RUN npm install
+COPY server/ ./
+COPY --from=0 /app/client/dist ../client/dist
+RUN npm run build
+
+EXPOSE 3001
+CMD ["npm", "start"]
+```
+
+**Production Checklist:**
+
+- [ ] Build both client and server
+- [ ] Configure environment variables (JWT secret, database URL, etc.)
+- [ ] Set up HTTPS/SSL certificates
+- [ ] Enable production-grade password hashing (bcrypt/Argon2)
+- [ ] Migrate from JSON files to a real database
+- [ ] Set up rate limiting
+- [ ] Configure CORS for your production domain
+- [ ] Set up monitoring and logging
+- [ ] Test authentication flow in production environment
+
 ## Key Features
 
 ### Authentication

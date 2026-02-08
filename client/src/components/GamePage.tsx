@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { getGameDetails } from '../services/api';
 import { Game, Tile as TileType } from '../types/Game';
 import { User } from '../types/User';
-import { GameBoard, TILE_SIZE } from './GameBoard';
-import { Tile } from './Tile';
-import { rotateTileClockwise, rotateTileCounterClockwise } from '@shared/utils/tileUtils';
+import { GameBoard } from './GameBoard';
+import { TileInPlay } from './TileInPlay';
 
 interface GamePageProps {
   gameCode: string;
@@ -16,7 +15,7 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Local state for rotated tile (starts with original tile value)
+  // Local state for rotated tile (updated by TileInPlay component after rotation)
   const [rotatedTile, setRotatedTile] = useState<TileType | null>(null);
 
   useEffect(() => {
@@ -50,18 +49,6 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
       setRotatedTile(game.tileInPlay);
     }
   }, [game?.tileInPlay]);
-
-  const handleRotateClockwise = () => {
-    if (rotatedTile !== null) {
-      setRotatedTile(rotateTileClockwise(rotatedTile));
-    }
-  };
-
-  const handleRotateCounterClockwise = () => {
-    if (rotatedTile !== null) {
-      setRotatedTile(rotateTileCounterClockwise(rotatedTile));
-    }
-  };
 
   if (loading) {
     return <p>Loading game...</p>;
@@ -128,40 +115,12 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
       )}
 
       {/* Tile in Play */}
-      {rotatedTile !== null && (
-        <div className="self-start">
-          <div className="header2 mb-10">
-            Tile in Play:
-          </div>
-          <svg viewBox={`0 0 ${TILE_SIZE} ${TILE_SIZE}`} className="svg-tile-in-play">
-            <Tile
-              tile={rotatedTile}
-              x={0}
-              y={0}
-              size={TILE_SIZE}
-            />
-          </svg>
-
-          {/* Rotation controls */}
-          <div className="flex gap-8 mt-10 justify-center">
-            <button
-              onClick={handleRotateClockwise}
-              disabled={!controlsEnabled}
-              className="btn btn-icon btn-info"
-              title="Rotate Clockwise"
-            >
-              ↻
-            </button>
-            <button
-              onClick={handleRotateCounterClockwise}
-              disabled={!controlsEnabled}
-              className="btn btn-icon btn-info"
-              title="Rotate Counter-Clockwise"
-            >
-              ↺
-            </button>
-          </div>
-        </div>
+      {game.tileInPlay !== undefined && (
+        <TileInPlay
+          tile={game.tileInPlay}
+          controlsEnabled={controlsEnabled}
+          onRotationComplete={setRotatedTile}
+        />
       )}
     </div>
   );
