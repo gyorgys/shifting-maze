@@ -121,7 +121,7 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
           Refresh
         </button>
       </div>
-      <ul style={{ listStyle: 'none', padding: 0 }}>
+      <ul className="list-unstyled">
         {games.map((game) => {
           const currentColor = getCurrentPlayerColor(game);
           const canChangeColor = game.stage === 'unstarted' && currentColor;
@@ -136,13 +136,13 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
                 {game.name}
               </div>
               <div className="text-supporting color-muted mb-10">
-                Code: <strong>{game.code}</strong> • {game.userCount} player{game.userCount !== 1 ? 's' : ''} • Stage: <strong>{game.stage}</strong>
+                Code: <span className="text-emphasized">{game.code}</span> • {game.userCount} player{game.userCount !== 1 ? 's' : ''} • Stage: <span className="text-emphasized">{game.stage}</span>
               </div>
 
               {/* Show current turn info if game is playing */}
               {game.currentTurn && (
                 <div className="text-normal color-success mb-10">
-                  Current turn: <strong>{game.currentTurn.username}</strong> ({game.currentTurn.color}) - {game.currentTurn.phase} phase
+                  Current turn: <span className="text-emphasized">{game.currentTurn.username}</span> ({game.currentTurn.color}) - {game.currentTurn.phase} phase
                 </div>
               )}
 
@@ -165,7 +165,7 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
                     ))}
                   </select>
                   {updatingColor === game.code && (
-                    <span className="text-supporting color-muted" style={{ marginLeft: '8px' }}>
+                    <span className="text-supporting color-muted ml-8">
                       Updating...
                     </span>
                   )}
@@ -175,8 +175,8 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
               {/* Show players list */}
               {game.players.length > 0 && (
                 <div className="mt-10 text-normal">
-                  <strong>Players:</strong>
-                  <ul style={{ margin: '5px 0 0 0', padding: '0 0 0 20px' }}>
+                  <span className="text-emphasized">Players:</span>
+                  <ul className="list-compact">
                     {game.players.map(player => (
                       <li key={player.username}>
                         {player.username} ({player.color})
@@ -197,11 +197,11 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
                     {startingGame === game.code ? 'Starting...' : 'Start Game'}
                   </button>
                   {!hasEnoughPlayers(game) ? (
-                    <span className="text-normal color-danger" style={{ marginLeft: '10px' }}>
+                    <span className="text-normal color-danger ml-10">
                       Need at least 2 players to start
                     </span>
                   ) : game.players.length < 4 && (
-                    <span className="text-supporting color-muted" style={{ marginLeft: '10px' }}>
+                    <span className="text-supporting color-muted ml-10">
                       (Waiting for more players is optional)
                     </span>
                   )}

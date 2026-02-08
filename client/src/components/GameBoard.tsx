@@ -68,7 +68,7 @@ export function GameBoard({
                 fill={controlsEnabled ? 'orange' : '#ccc'}
                 stroke="#000"
                 strokeWidth="1"
-                style={{ cursor: controlsEnabled ? 'pointer' : 'not-allowed' }}
+                className={controlsEnabled ? 'cursor-pointer' : 'cursor-not-allowed'}
                 onClick={controlsEnabled ? () => handleShiftRow(rowIdx, 'right') : undefined}
               />
               {/* Right arrow - pointing left */}
@@ -81,7 +81,7 @@ export function GameBoard({
                 fill={controlsEnabled ? 'orange' : '#ccc'}
                 stroke="#000"
                 strokeWidth="1"
-                style={{ cursor: controlsEnabled ? 'pointer' : 'not-allowed' }}
+                className={controlsEnabled ? 'cursor-pointer' : 'cursor-not-allowed'}
                 onClick={controlsEnabled ? () => handleShiftRow(rowIdx, 'left') : undefined}
               />
             </g>
@@ -104,7 +104,7 @@ export function GameBoard({
                 fill={controlsEnabled ? 'orange' : '#ccc'}
                 stroke="#000"
                 strokeWidth="1"
-                style={{ cursor: controlsEnabled ? 'pointer' : 'not-allowed' }}
+                className={controlsEnabled ? 'cursor-pointer' : 'cursor-not-allowed'}
                 onClick={controlsEnabled ? () => handleShiftColumn(colIdx, 'down') : undefined}
               />
               {/* Bottom arrow - pointing up */}
@@ -117,7 +117,7 @@ export function GameBoard({
                 fill={controlsEnabled ? 'orange' : '#ccc'}
                 stroke="#000"
                 strokeWidth="1"
-                style={{ cursor: controlsEnabled ? 'pointer' : 'not-allowed' }}
+                className={controlsEnabled ? 'cursor-pointer' : 'cursor-not-allowed'}
                 onClick={controlsEnabled ? () => handleShiftColumn(colIdx, 'up') : undefined}
               />
             </g>

@@ -52,14 +52,14 @@ export function GamePage({ gameCode, user }: GamePageProps) {
       {/* Info Panel */}
       <div className="card self-start">
         <div className="mb-10">
-          <strong>Stage:</strong> {game.stage}
+          <span className="text-emphasized">Stage:</span> {game.stage}
         </div>
 
 
         {/* Players list */}
         <div>
-          <strong>Players:</strong>
-          <ul style={{ margin: '5px 0 0 0', padding: '0 0 0 20px' }}>
+          <span className="text-emphasized">Players:</span>
+          <ul className="list-compact">
             {game.players.map(player => {
               const isCurrentPlayer = game.currentTurn?.username === player.username;
               return (
@@ -68,7 +68,7 @@ export function GamePage({ gameCode, user }: GamePageProps) {
                     className="player-indicator"
                     style={{ backgroundColor: player.color }}
                   ></span>
-                  <span style={{ fontWeight: isCurrentPlayer ? 'bold' : 'normal' }}>
+                  <span className={isCurrentPlayer ? 'text-emphasized' : 'text-normal'}>
                     {player.username} ({player.color})
                     {isCurrentPlayer && game.currentTurn && (
                       <span> - {game.currentTurn.phase}</span>

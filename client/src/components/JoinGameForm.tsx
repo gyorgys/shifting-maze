@@ -49,8 +49,7 @@ export function JoinGameForm({ user, onSuccess }: JoinGameFormProps) {
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          className="input"
-          style={{ textTransform: 'uppercase' }}
+          className="input uppercase"
           disabled={submitting}
           placeholder="ABCD"
           maxLength={4}

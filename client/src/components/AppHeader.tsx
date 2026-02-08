@@ -8,9 +8,9 @@ interface AppHeaderProps {
 
 export function AppHeader({ content, username, onLogout }: AppHeaderProps) {
   return (
-    <header className="grid-header border mb-20" style={{ padding: '12px 20px', borderTop: 'none', borderLeft: 'none', borderRight: 'none', whiteSpace: 'nowrap' }}>
+    <header className="grid-header border border-bottom-only py-12 px-20 mb-20 whitespace-nowrap">
       {/* Left: App title */}
-      <h1 className="title" style={{ whiteSpace: 'nowrap' }}>
+      <h1 className="title">
         Shifting Maze
       </h1>
 
@@ -20,7 +20,7 @@ export function AppHeader({ content, username, onLogout }: AppHeaderProps) {
       </div>
 
       {/* Right: User info + logout */}
-      <div className="flex items-center gap-12 justify-end" style={{ whiteSpace: 'nowrap' }}>
+      <div className="flex items-center gap-12 justify-end">
         {username && onLogout && (
           <>
             <span className="text-normal">{username}</span>

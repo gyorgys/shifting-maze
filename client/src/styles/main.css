@@ -327,6 +327,14 @@ body {
   margin-right: 8px;
 }
 
+.ml-8 {
+  margin-left: 8px;
+}
+
+.ml-10 {
+  margin-left: 10px;
+}
+
 /* Padding utilities */
 .p-0 {
   padding: 0;
@@ -356,6 +364,11 @@ body {
 .py-0 {
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.py-12 {
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 
 /* ============================================
@@ -470,6 +483,12 @@ body {
   border-radius: 50%;
 }
 
+.border-bottom-only {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
 /* ============================================
    10. INTERACTIVE STATES
    ============================================ */
@@ -529,7 +548,34 @@ body {
 }
 
 /* ============================================
-   13. SVG SPECIFIC
+   13. LIST UTILITIES
+   ============================================ */
+
+.list-compact {
+  margin: 5px 0 0 0;
+  padding: 0 0 0 20px;
+}
+
+.list-unstyled {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================
+   14. TEXT UTILITIES
+   ============================================ */
+
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+/* ============================================
+   15. SVG SPECIFIC
    ============================================ */
 
 .svg-board {
