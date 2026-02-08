@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { CreateUserForm } from './components/CreateUserForm';
 import { LoginForm } from './components/LoginForm';
@@ -9,28 +10,9 @@ import { GamePage } from './components/GamePage';
 import { AppHeader } from './components/AppHeader';
 
 type AuthView = 'login' | 'create';
-type MainView = 'games' | 'game-detail';
 
 function App() {
   const { user, loading, login, logout } = useAuth();
-  const [authView, setAuthView] = useState<AuthView>('login');
-  const [mainView, setMainView] = useState<MainView>('games');
-  const [selectedGameCode, setSelectedGameCode] = useState<string | null>(null);
-  const [selectedGameName, setSelectedGameName] = useState<string | null>(null);
-  const [refreshGames, setRefreshGames] = useState(0);
-
-  // Navigation helpers
-  const navigateToGame = (gameCode: string, gameName: string) => {
-    setSelectedGameCode(gameCode);
-    setSelectedGameName(gameName);
-    setMainView('game-detail');
-  };
-
-  const navigateToGames = () => {
-    setSelectedGameCode(null);
-    setSelectedGameName(null);
-    setMainView('games');
-  };
 
   if (loading) {
     return (
@@ -41,65 +23,151 @@ function App() {
     );
   }
 
-  // Not authenticated - show login/create user
-  if (!user) {
-    return (
-      <div style={{ fontFamily: 'Arial, sans-serif' }}>
-        <AppHeader />
-
-        <div style={{ padding: '0 20px' }}>
-          {authView === 'login' ? (
-            <>
-              <h2>Login</h2>
-              <LoginForm onSuccess={login} />
-              <p style={{ marginTop: '20px' }}>
-                Don't have an account?{' '}
-                <button
-                  onClick={() => setAuthView('create')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#007bff',
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                  }}
-                >
-                  Create one
-                </button>
-              </p>
-            </>
+  return (
+    <div style={{ fontFamily: 'Arial, sans-serif' }}>
+      <Routes>
+        <Route path="/" element={
+          user ? (
+            <HomePage user={user} logout={logout} />
           ) : (
-            <>
-              <h2>Create Account</h2>
-              <CreateUserForm onSuccess={login} />
-              <p style={{ marginTop: '20px' }}>
-                Already have an account?{' '}
-                <button
-                  onClick={() => setAuthView('login')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#007bff',
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                  }}
-                >
-                  Login
-                </button>
-              </p>
-            </>
-          )}
-        </div>
+            <AuthPage login={login} />
+          )
+        } />
+        <Route path="/game/:code" element={
+          user ? (
+            <GameDetailPageWrapper user={user} logout={logout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        } />
+      </Routes>
+    </div>
+  );
+}
+
+// Auth page component (login/create account)
+function AuthPage({ login }: { login: (user: any) => void }) {
+  const [authView, setAuthView] = useState<AuthView>('login');
+
+  return (
+    <>
+      <AppHeader />
+      <div style={{ padding: '0 20px' }}>
+        {authView === 'login' ? (
+          <>
+            <h2>Login</h2>
+            <LoginForm onSuccess={login} />
+            <p style={{ marginTop: '20px' }}>
+              Don't have an account?{' '}
+              <button
+                onClick={() => setAuthView('create')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#007bff',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                Create one
+              </button>
+            </p>
+          </>
+        ) : (
+          <>
+            <h2>Create Account</h2>
+            <CreateUserForm onSuccess={login} />
+            <p style={{ marginTop: '20px' }}>
+              Already have an account?{' '}
+              <button
+                onClick={() => setAuthView('login')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#007bff',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                Login
+              </button>
+            </p>
+          </>
+        )}
       </div>
-    );
+    </>
+  );
+}
+
+// Home page component (games list)
+function HomePage({ user, logout }: { user: any; logout: () => void }) {
+  const [refreshGames, setRefreshGames] = useState(0);
+  const navigate = useNavigate();
+
+  const navigateToGame = (gameCode: string) => {
+    navigate(`/game/${gameCode}`);
+  };
+
+  const headerContent = (
+    <h2 style={{ margin: 0, fontSize: '18px' }}>Games</h2>
+  );
+
+  return (
+    <>
+      <AppHeader
+        content={headerContent}
+        username={user.displayName}
+        onLogout={logout}
+      />
+      <div style={{ padding: '0 20px' }}>
+        <h2>Create New Game</h2>
+        <CreateGameForm
+          user={user}
+          onSuccess={(code, name) => {
+            alert(`Game created! Code: ${code}\nName: ${name}`);
+            setRefreshGames(prev => prev + 1);
+          }}
+        />
+
+        <hr style={{ margin: '20px 0' }} />
+
+        <h2>Join Game</h2>
+        <JoinGameForm
+          user={user}
+          onSuccess={() => {
+            setRefreshGames(prev => prev + 1);
+          }}
+        />
+
+        <hr style={{ margin: '20px 0' }} />
+
+        <GamesList
+          user={user}
+          refresh={refreshGames}
+          onViewGame={navigateToGame}
+        />
+      </div>
+    </>
+  );
+}
+
+// Game detail page wrapper (extracts route params)
+function GameDetailPageWrapper({ user, logout }: { user: any; logout: () => void }) {
+  const { code } = useParams<{ code: string }>();
+  const navigate = useNavigate();
+
+  if (!code) {
+    return <Navigate to="/" replace />;
   }
 
-  // Header center content based on current view
-  const headerContent = mainView === 'games' ? (
-    <h2 style={{ margin: 0, fontSize: '18px' }}>Games</h2>
-  ) : (
+  const navigateToGames = () => {
+    navigate('/');
+  };
+
+  // We'll need to fetch the game name for the header, but for now just show the code
+  const headerContent = (
     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
       <button
         onClick={navigateToGames}
@@ -116,61 +184,23 @@ function App() {
         ←
       </button>
       <div>
-        <h2 style={{ margin: 0, fontSize: '18px' }}>{selectedGameName}</h2>
-        <span style={{ fontSize: '12px', color: '#6c757d' }}>{selectedGameCode}</span>
+        <h2 style={{ margin: 0, fontSize: '18px' }}>Game</h2>
+        <span style={{ fontSize: '12px', color: '#6c757d' }}>{code}</span>
       </div>
     </div>
   );
 
-  // Authenticated - show games list or game detail
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif' }}>
+    <>
       <AppHeader
         content={headerContent}
         username={user.displayName}
         onLogout={logout}
       />
-
       <div style={{ padding: '0 20px' }}>
-        {mainView === 'games' ? (
-          <>
-            <h2>Create New Game</h2>
-            <CreateGameForm
-              user={user}
-              onSuccess={(code, name) => {
-                alert(`Game created! Code: ${code}\nName: ${name}`);
-                setRefreshGames(prev => prev + 1);
-              }}
-            />
-
-            <hr style={{ margin: '20px 0' }} />
-
-            <h2>Join Game</h2>
-            <JoinGameForm
-              user={user}
-              onSuccess={() => {
-                setRefreshGames(prev => prev + 1);
-              }}
-            />
-
-            <hr style={{ margin: '20px 0' }} />
-
-            <GamesList
-              user={user}
-              refresh={refreshGames}
-              onViewGame={navigateToGame}
-            />
-          </>
-        ) : (
-          selectedGameCode && (
-            <GamePage
-              gameCode={selectedGameCode}
-              user={user}
-            />
-          )
-        )}
+        <GamePage gameCode={code} user={user} />
       </div>
-    </div>
+    </>
   );
 }
 

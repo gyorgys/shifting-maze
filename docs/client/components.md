@@ -224,7 +224,7 @@ Displays all games the user is part of with detailed information and actions.
 interface GamesListProps {
   user: User;                                 // Current authenticated user
   refresh: number;                            // Increment to trigger re-fetch
-  onViewGame?: (gameCode: string, gameName: string) => void;  // Callback when viewing a game
+  onViewGame?: (gameCode: string) => void;    // Callback when viewing a game (navigates to /game/:code)
 }
 ```
 
@@ -259,11 +259,12 @@ interface GamesListProps {
 **Usage:**
 ```tsx
 const [refreshGames, setRefreshGames] = useState(0);
+const navigate = useNavigate();
 
 <GamesList
   user={user}
   refresh={refreshGames}
-  onViewGame={(code, name) => navigateToGame(code, name)}
+  onViewGame={(code) => navigate(`/game/${code}`)}
 />
 
 // Trigger refresh after creating/joining game
@@ -471,67 +472,61 @@ interface PlayerMarkerProps {
 
 ### App
 
-Root application component with authentication and view routing.
+Root application component with authentication and URL-based routing.
 
 **File:** [client/src/App.tsx](../../client/src/App.tsx)
 
 **Features:**
 - Uses `useAuth` hook for authentication state
-- State-based view routing (no routing library)
+- URL-based routing using React Router
 - AppHeader displayed on all views with view-specific center content
 - View toggle between login and registration
 - Navigation between games list and game detail
 - Game list refresh mechanism
 
-**Views:**
+**Routes:**
 
-1. **Loading State:**
-   - AppHeader (title only)
-   - Shown while checking localStorage for existing session
+1. **`/` - Home Route:**
+   - **Unauthenticated:** Shows login/create account toggle (AuthPage component)
+   - **Authenticated:** Shows games list (HomePage component)
 
-2. **Unauthenticated View:**
-   - AppHeader (title only)
+2. **`/game/:code` - Game Detail Route:**
+   - **Authenticated:** Shows game board and details (GameDetailPageWrapper component)
+   - **Unauthenticated:** Redirects to `/`
+
+**Page Components:**
+
+1. **AuthPage:**
    - Toggle between Login and Create Account
    - LoginForm component
    - CreateUserForm component
-   - Toggle buttons to switch views
 
-3. **Authenticated - Games View:**
+2. **HomePage:**
    - AppHeader with "Games" center title, user info + logout
    - CreateGameForm component
    - JoinGameForm component
    - GamesList component (with "View Game" buttons for playing games)
    - Auto-refresh of games list after creating/joining
 
-4. **Authenticated - Game Detail View:**
-   - AppHeader with game name/code center content, user info + logout
+3. **GameDetailPageWrapper:**
+   - Extracts `code` parameter from URL using `useParams()`
+   - AppHeader with game code center content, user info + logout
    - GamePage component showing full game state
    - Back button to return to games list
 
-**State Management:**
-```typescript
-const { user, loading, login, logout } = useAuth();
-const [authView, setAuthView] = useState<'login' | 'create'>('login');
-const [mainView, setMainView] = useState<'games' | 'game-detail'>('games');
-const [selectedGameCode, setSelectedGameCode] = useState<string | null>(null);
-const [selectedGameName, setSelectedGameName] = useState<string | null>(null);
-const [refreshGames, setRefreshGames] = useState(0);
-```
-
 **Navigation:**
 ```typescript
-const navigateToGame = (gameCode: string, gameName: string) => {
-  setSelectedGameCode(gameCode);
-  setSelectedGameName(gameName);
-  setMainView('game-detail');
-};
+// Navigate to game detail page
+const navigate = useNavigate();
+navigate(`/game/${gameCode}`);
 
-const navigateToGames = () => {
-  setSelectedGameCode(null);
-  setSelectedGameName(null);
-  setMainView('games');
-};
+// Navigate back to home
+navigate('/');
 ```
+
+**URL Examples:**
+- Home: `http://localhost:5173/`
+- Game detail: `http://localhost:5173/game/WXYZ`
 
 ---
 

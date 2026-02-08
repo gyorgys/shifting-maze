@@ -6,7 +6,7 @@ import { User } from '../types/User';
 interface GamesListProps {
   user: User;
   refresh: number;
-  onViewGame?: (gameCode: string, gameName: string) => void;
+  onViewGame?: (gameCode: string) => void;
 }
 
 export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
@@ -248,7 +248,7 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
               {game.stage !== 'unstarted' && onViewGame && (
                 <div style={{ marginTop: '15px' }}>
                   <button
-                    onClick={() => onViewGame(game.code, game.name)}
+                    onClick={() => onViewGame(game.code)}
                     style={{
                       padding: '10px 20px',
                       fontSize: '14px',
