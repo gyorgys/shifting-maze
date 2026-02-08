@@ -18,9 +18,7 @@ export const TILE_SIZE = 80;
 const ARROW_WIDTH = TILE_SIZE * 0.5;  // 40px - perpendicular to direction
 const ARROW_LENGTH = TILE_SIZE * 0.2; // 16px - in direction of pointing
 const ARROW_GAP = 4;
-
-// Preview tile positioning
-const PREVIEW_GAP = 8; // Gap between preview tile and board edge
+const OUTER_BORDER_GAP = 4; // Gap between preview tile and outer SVG border
 
 // Hover state type
 type HoverState =
@@ -40,8 +38,8 @@ export function GameBoard({
   const boardSize = 7 * TILE_SIZE;
   const shiftableIndices = [1, 3, 5]; // Rows/columns that can be shifted
 
-  // Total padding to accommodate preview tiles
-  const PADDING = TILE_SIZE + PREVIEW_GAP;
+  // Total padding: tile size + gap to outer border
+  const PADDING = TILE_SIZE + OUTER_BORDER_GAP;
 
   const handleShiftRow = (row: number, direction: 'left' | 'right') => {
     console.log(`Shift row ${row} ${direction}`);
@@ -52,26 +50,27 @@ export function GameBoard({
   };
 
   // Calculate preview tile position based on hovered arrow
+  // Preview tiles are flush against the board edge
   const getPreviewPosition = (): { x: number; y: number } | null => {
     if (!hoveredArrow || !controlsEnabled) return null;
 
     if (hoveredArrow.type === 'row') {
       const y = hoveredArrow.index * TILE_SIZE;
       if (hoveredArrow.direction === 'right') {
-        // Left side - tile pushing from left
-        return { x: -TILE_SIZE - PREVIEW_GAP, y };
+        // Left side - tile flush against left edge of board
+        return { x: -TILE_SIZE, y };
       } else {
-        // Right side - tile pushing from right
-        return { x: boardSize + PREVIEW_GAP, y };
+        // Right side - tile flush against right edge of board
+        return { x: boardSize, y };
       }
     } else {
       const x = hoveredArrow.index * TILE_SIZE;
       if (hoveredArrow.direction === 'down') {
-        // Top side - tile pushing from top
-        return { x, y: -TILE_SIZE - PREVIEW_GAP };
+        // Top side - tile flush against top edge of board
+        return { x, y: -TILE_SIZE };
       } else {
-        // Bottom side - tile pushing from bottom
-        return { x, y: boardSize + PREVIEW_GAP };
+        // Bottom side - tile flush against bottom edge of board
+        return { x, y: boardSize };
       }
     }
   };

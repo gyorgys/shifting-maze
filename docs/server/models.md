@@ -2,39 +2,26 @@
 
 This document describes the data models used in the Shifting Maze server.
 
-## Type Definitions
+## Shared Type Definitions
 
-**File:** [server/src/models/Game.ts](../../server/src/models/Game.ts)
+Many core game types are defined in the shared directory and imported by the server. See [Shared Code Documentation](../shared/README.md) for details.
 
-### PlayerColor Type
+**Shared types:**
+- `PlayerColor` - Player colors ('red' | 'green' | 'blue' | 'white')
+- `GameStage` - Game stages ('unstarted' | 'playing' | 'finished')
+- `TurnPhase` - Turn phases ('shift' | 'move')
+- `Position` - Board coordinates [row, col]
+- `Tile` - Tile bitmask (0-15)
+- `TokenId` - Token identifier (0-20)
+- `Player` - Player interface (username + color)
+- `CurrentTurn` - Current turn state
 
-Player colors available in the game.
-
+**Server import:**
 ```typescript
-type PlayerColor = 'red' | 'green' | 'blue' | 'white';
+import type { PlayerColor, GameStage, TurnPhase, Position, Tile, TokenId, Player, CurrentTurn } from '@shared/types';
 ```
 
-**Values:**
-- `'red'` - Red player
-- `'green'` - Green player
-- `'blue'` - Blue player
-- `'white'` - White player
-
-**Usage:** String literal union type for player identification and color assignment.
-
-### Type Aliases
-
-```typescript
-type Position = [number, number];  // Board coordinates [row, col]
-type Tile = number;                // Tile bitmask (0-15)
-type TokenId = number;             // Token identifier (0-20)
-```
-
-**Position:** Represents a board coordinate as `[row, col]`. Used for player positions, token positions, etc.
-
-**Tile:** Represents a tile using a 4-bit bitmask (0-15) where each bit indicates if a side is open.
-
-**TokenId:** Represents a token identifier (0-20). Each token has a unique ID.
+These types are re-exported from [server/src/models/Game.ts](../../server/src/models/Game.ts) for convenience.
 
 ## User Model
 
@@ -126,12 +113,17 @@ interface LoginResponse {
 
 **File:** [server/src/models/Game.ts](../../server/src/models/Game.ts)
 
-### Type Definitions
+### Shared Game Types
+
+The following types are imported from the shared directory (see [Shared Code Documentation](../shared/README.md)):
 
 ```typescript
 type PlayerColor = 'red' | 'green' | 'blue' | 'white';
 type GameStage = 'unstarted' | 'playing' | 'finished';
 type TurnPhase = 'shift' | 'move';
+type Position = [number, number];
+type Tile = number;
+type TokenId = number;
 ```
 
 ### Player Interface

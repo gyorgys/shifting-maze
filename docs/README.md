@@ -48,6 +48,10 @@ Shifting Maze is a web application that allows users to create accounts, authent
 
 ## Documentation Index
 
+### Shared Code
+
+- **[Shared Types & Utilities](./shared/README.md)** - Types and utilities shared between client and server
+
 ### Server Documentation
 
 - **[Models](./server/models.md)** - Data structures for User and Game
@@ -58,10 +62,6 @@ Shifting Maze is a web application that allows users to create accounts, authent
 - **[Components](./client/components.md)** - React component reference
 - **[Types](./client/types.md)** - TypeScript type definitions
 - **[Utilities](./client/utils.md)** - Utility functions and helpers
-
-### Shared Code
-
-- **[Shared README](../shared/README.md)** - Utilities and types shared between client and server
 
 ## Quick Start
 
