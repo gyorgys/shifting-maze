@@ -157,7 +157,21 @@ Tokens exist in one of two states:
 1. **On Board**: Tracked in `tokenPositions` map (tokenId → position)
 2. **Collected**: Tracked in `collectedTokens` map (playerColor → tokenId[])
 
-**Collection**: When a player lands on a tile containing a token, they collect it (implementation pending).
+### Token Collection Rules
+
+**Important**: Tokens must be collected **in order** from lowest to highest value:
+- Only the **smallest value token** currently on the board can be collected
+- Players cannot collect higher-value tokens until the lower-value ones are collected
+- When a player lands on a collectible token (the current lowest value), they automatically collect it
+- If a player lands on a non-collectible token (higher value than current lowest), nothing happens
+
+**Example**:
+- If tokens 0, 3, 5, 7, 12, 20 are still on the board
+- Only token 0 (value 1) can be collected
+- After token 0 is collected, only token 3 (value 4) can be collected next
+- Token 20 (value 25) cannot be collected until all lower tokens are collected first
+
+This rule adds strategic depth: players must plan their moves to reach the next collectible token in sequence.
 
 ## Game Stages
 
@@ -185,8 +199,8 @@ Tokens exist in one of two states:
 
 ### 3. Finished
 
-- **End State**: Game has concluded
-- **Winning Condition**: *To be defined (likely highest score)*
+- **End State**: Game has concluded (all 21 tokens collected)
+- **Winner**: Player with the highest total score
 - **Actions Allowed**: View final scores and game history
 
 ## Turn Structure
@@ -202,7 +216,7 @@ Each player's turn consists of two mandatory phases:
 2. Player selects a row or column to shift
 3. The tile in play is inserted, pushing all tiles in that row/column
 4. The tile pushed off the board becomes the new "tile in play"
-5. Player positions and token positions shift with the tiles
+5. Player positions and token positions shift with the tiles. Players and tokens that were pushed off the board will be placed on the newly inserted tile on the other side.
 
 **Restrictions** (*planned*):
 - Cannot reverse the previous player's shift immediately
@@ -213,11 +227,12 @@ Each player's turn consists of two mandatory phases:
 **Objective**: Move player piece to collect tokens
 
 **Mechanics** (*in development*):
-1. Player can move their piece along connected paths
+1. Player can move their piece along connected paths, they can also stay in place
 2. Movement follows open sides of tiles
 3. Can only move to tiles with valid path connections
 4. Can move any distance along connected paths (in one direction or path)
-5. If player lands on a tile with a token, they collect it
+5. If player lands on a tile with the **lowest-value token currently on the board**, they automatically collect it
+6. Landing on tiles with higher-value tokens has no effect (cannot collect out of order)
 
 **Restrictions** (*planned*):
 - Must stay on connected paths
@@ -272,11 +287,12 @@ Player 3: Shift → Move → Next Player
 
 ### 5. Game End
 
-- **Win Condition**: *To be defined*
-- **Possible Conditions** (not yet implemented):
-  - All tokens collected → highest score wins
-  - Turn limit reached → highest score wins
-  - Player completes specific objective → that player wins
+- **End Condition**: Game ends when all 21 tokens have been collected
+- **Win Condition**: Player with the highest score wins
+- **Scoring**: Sum of all collected token values
+  - Tokens 0-19 = 1-20 points respectively
+  - Token 20 = 25 points
+  - Maximum possible score: 231 points (sum of 1+2+3+...+20+25)
 - Game stage changes to "finished"
 
 ## Current Implementation Status
@@ -305,10 +321,11 @@ Player 3: Shift → Move → Next Player
 
 - ❌ Shift restrictions (preventing immediate reversal)
 - ❌ Movement validation (path connectivity)
-- ❌ Token collection triggering
-- ❌ Score calculation
-- ❌ Win condition detection
-- ❌ Game end and final scoring
+- ❌ Token collection triggering (lowest-value token only)
+- ❌ Visual indicator for which token is currently collectible
+- ❌ Score calculation and display
+- ❌ Game end detection (all tokens collected)
+- ❌ Winner determination and final scoring
 - ❌ Player leaving game
 - ❌ Game history and replay
 
