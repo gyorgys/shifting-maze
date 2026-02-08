@@ -118,6 +118,7 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
           board={game.board}
           playerPositions={game.playerPositions}
           tokenPositions={game.tokenPositions}
+          tileInPlay={rotatedTile !== null ? rotatedTile : game.tileInPlay}
           controlsEnabled={controlsEnabled}
         />
       ) : (
