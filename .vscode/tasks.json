@@ -2,6 +2,76 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Setup",
+      "detail": "One-time setup: check for Node.js and install dependencies for client and server",
+      "dependsOn": [
+        "Setup - Check Node",
+        "Setup - Server",
+        "Setup - Client"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+    {
+      "label": "Setup - Check Node",
+      "type": "shell",
+      "command": "node --version && npm --version && echo '✓ Node.js and npm are installed'",
+      "windows": {
+        "command": "node --version && npm --version && echo Node.js and npm are installed"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+    {
+      "label": "Setup - Client",
+      "type": "shell",
+      "command": "npm install",
+      "options": {
+        "cwd": "${workspaceFolder}/client"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+    {
+      "label": "Setup - Server",
+      "type": "shell",
+      "command": "npm install",
+      "options": {
+        "cwd": "${workspaceFolder}/server"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+    {
       "label": "Build Client",
       "type": "shell",
       "command": "cd client && npm run build",
