@@ -1,7 +1,8 @@
-import { Game, PlayerColor, Position } from '../models/Game';
+import { Game, PlayerColor, Position, Tile } from '../models/Game';
 import * as storage from '../utils/fileStorage';
 import { isValidGameName, generateGameCode } from '../utils/validation';
 import { initializeBoard, initializeTokens } from '../utils/boardUtils';
+import { shiftRow, shiftColumn, updatePositionsInRow, updatePositionsInColumn } from '../utils/shiftUtils';
 
 async function generateUniqueGameCode(): Promise<string> {
   let attempts = 0;
@@ -216,6 +217,79 @@ export async function updatePlayerColor(code: string, username: string, newColor
   // Write updated game
   const gamePath = storage.getGameFilePath(code);
   await storage.writeJsonFile(gamePath, game);
+}
+
+// Perform a shift action during the shift phase of a player's turn
+export async function performShift(
+  code: string,
+  username: string,
+  tile: Tile,
+  shiftType: 'row' | 'column',
+  shiftIndex: number,
+  direction: string
+): Promise<Game> {
+  const game = await getGameByCode(code);
+  if (!game) {
+    throw new Error('Game not found');
+  }
+
+  // Validate game is in playing stage
+  if (game.stage !== 'playing') {
+    throw new Error('Game is not in progress');
+  }
+
+  // Validate it's the user's turn
+  const playerIndex = game.players.findIndex(p => p.username === username);
+  if (playerIndex === -1) {
+    throw new Error('User is not in this game');
+  }
+  if (game.currentPlayerIndex !== playerIndex) {
+    throw new Error('Not your turn');
+  }
+
+  // Validate we're in shift phase
+  if (game.currentPhase !== 'shift') {
+    throw new Error('Not in shift phase');
+  }
+
+  // Validate shift index (only odd indices 1, 3, 5 are shiftable)
+  if (![1, 3, 5].includes(shiftIndex)) {
+    throw new Error('Invalid shift index');
+  }
+
+  // Validate tile value
+  if (typeof tile !== 'number' || tile < 0 || tile > 15) {
+    throw new Error('Invalid tile value');
+  }
+
+  // Perform the shift
+  let pushedTile: Tile;
+  if (shiftType === 'row') {
+    if (direction !== 'left' && direction !== 'right') {
+      throw new Error('Invalid direction for row shift');
+    }
+    pushedTile = shiftRow(game.board!, shiftIndex, direction, tile);
+    updatePositionsInRow(shiftIndex, direction, game.playerPositions!);
+    updatePositionsInRow(shiftIndex, direction, game.tokenPositions!);
+  } else if (shiftType === 'column') {
+    if (direction !== 'up' && direction !== 'down') {
+      throw new Error('Invalid direction for column shift');
+    }
+    pushedTile = shiftColumn(game.board!, shiftIndex, direction, tile);
+    updatePositionsInColumn(shiftIndex, direction, game.playerPositions!);
+    updatePositionsInColumn(shiftIndex, direction, game.tokenPositions!);
+  } else {
+    throw new Error('Invalid shift type');
+  }
+
+  // Update game state
+  game.tileInPlay = pushedTile;
+  game.currentPhase = 'move';
+
+  // Save and return
+  const gamePath = storage.getGameFilePath(code);
+  await storage.writeJsonFile(gamePath, game);
+  return game;
 }
 
 // Helper function to shuffle an array

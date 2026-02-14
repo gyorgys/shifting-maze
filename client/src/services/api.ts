@@ -212,6 +212,30 @@ export async function getGameDetails(gameCode: string, token: string): Promise<G
   }
 }
 
+export interface ShiftRequest {
+  tile: number;
+  shiftType: 'row' | 'column';
+  shiftIndex: number;
+  direction: string;
+}
+
+export async function performShift(
+  gameCode: string,
+  token: string,
+  shift: ShiftRequest
+): Promise<Game> {
+  try {
+    return await jsonRequest<Game>(`/api/games/${gameCode}/shift`, {
+      method: 'POST',
+      token,
+      body: shift,
+    });
+  } catch (error) {
+    console.error('Perform shift error:', error);
+    throw error;
+  }
+}
+
 export async function startGame(gameCode: string, token: string): Promise<void> {
   try {
     await jsonRequest<void>(`/api/games/${gameCode}/start`, {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getGameDetails } from '../services/api';
+import { getGameDetails, performShift, ShiftRequest } from '../services/api';
 import { Game, Tile as TileType } from '../types/Game';
 import { User } from '../types/User';
 import { GameBoard } from './GameBoard';
@@ -17,6 +17,8 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
   const [error, setError] = useState<string | null>(null);
   // Local state for rotated tile (updated by TileInPlay component after rotation)
   const [rotatedTile, setRotatedTile] = useState<TileType | null>(null);
+  const [isShifting, setIsShifting] = useState(false);
+  const [shiftError, setShiftError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadGame() {
@@ -50,6 +52,31 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
     }
   }, [game?.tileInPlay]);
 
+  const handleShiftComplete = async (shiftRequest: ShiftRequest) => {
+    setIsShifting(true);
+    setShiftError(null);
+
+    try {
+      const updatedGame = await performShift(gameCode, user.token, shiftRequest);
+      setGame(updatedGame);
+      setRotatedTile(updatedGame.tileInPlay!);
+    } catch (err) {
+      setShiftError((err as Error).message);
+      // Re-fetch game state to re-sync
+      try {
+        const freshGame = await getGameDetails(gameCode, user.token);
+        setGame(freshGame);
+        if (freshGame.tileInPlay !== undefined) {
+          setRotatedTile(freshGame.tileInPlay);
+        }
+      } catch {
+        // If re-fetch also fails, keep showing the error
+      }
+    } finally {
+      setIsShifting(false);
+    }
+  };
+
   if (loading) {
     return <p>Loading game...</p>;
   }
@@ -62,8 +89,11 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
     return <p>Game not found</p>;
   }
 
-  // Controls are only enabled during shift phase for the current player
-  const controlsEnabled = game.currentTurn?.username === user.username && game.currentTurn?.phase === 'shift';
+  // Controls are only enabled during shift phase for the current player (and not mid-shift)
+  const controlsEnabled =
+    game.currentTurn?.username === user.username &&
+    game.currentTurn?.phase === 'shift' &&
+    !isShifting;
 
   return (
     <div className="grid-game-page">
@@ -97,6 +127,11 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
             })}
           </ul>
         </div>
+
+        {/* Shift error message */}
+        {shiftError && (
+          <div className="text-error mt-10">Shift failed: {shiftError}</div>
+        )}
       </div>
 
       {/* Game Board */}
@@ -107,6 +142,7 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
           tokenPositions={game.tokenPositions}
           tileInPlay={rotatedTile !== null ? rotatedTile : game.tileInPlay}
           controlsEnabled={controlsEnabled}
+          onShiftComplete={handleShiftComplete}
         />
       ) : (
         <div className="card p-20">

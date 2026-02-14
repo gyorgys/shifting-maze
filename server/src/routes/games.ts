@@ -207,6 +207,70 @@ router.post('/:code/start', authenticateToken, async (req: Request, res: Respons
   }
 });
 
+// POST /api/games/:code/shift - Perform a shift action during the shift phase
+router.post('/:code/shift', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { code } = req.params;
+    const { tile, shiftType, shiftIndex, direction } = req.body;
+    const username = req.user!.username;
+
+    // Validate request body
+    if (typeof tile !== 'number' || tile < 0 || tile > 15) {
+      res.status(400).json({ error: 'Invalid tile value (must be 0-15)' });
+      return;
+    }
+    if (!['row', 'column'].includes(shiftType)) {
+      res.status(400).json({ error: 'Invalid shift type (must be row or column)' });
+      return;
+    }
+    if (![1, 3, 5].includes(shiftIndex)) {
+      res.status(400).json({ error: 'Invalid shift index (must be 1, 3, or 5)' });
+      return;
+    }
+    const validDirections = shiftType === 'row' ? ['left', 'right'] : ['up', 'down'];
+    if (!validDirections.includes(direction)) {
+      res.status(400).json({ error: `Invalid direction for ${shiftType} shift` });
+      return;
+    }
+
+    const game = await gameService.performShift(code, username, tile, shiftType, shiftIndex, direction);
+
+    // Return full game state (same format as GET /api/games/:code)
+    const currentPlayer = game.players[game.currentPlayerIndex!];
+    res.status(200).json({
+      code: game.code,
+      name: game.name,
+      createdBy: game.createdBy,
+      userCount: game.players.length,
+      stage: game.stage,
+      players: game.players,
+      currentTurn: {
+        username: currentPlayer.username,
+        color: currentPlayer.color,
+        phase: game.currentPhase,
+      },
+      board: game.board,
+      tileInPlay: game.tileInPlay,
+      playerPositions: game.playerPositions,
+      tokenPositions: game.tokenPositions,
+      collectedTokens: game.collectedTokens,
+    });
+  } catch (error) {
+    console.error('Error performing shift:', error);
+
+    const errorMessage = (error as Error).message;
+    if (errorMessage.includes('not found')) {
+      res.status(404).json({ error: errorMessage });
+    } else if (errorMessage.includes('Not your turn') || errorMessage.includes('Not in shift phase') || errorMessage.includes('not in this game')) {
+      res.status(403).json({ error: errorMessage });
+    } else if (errorMessage.includes('not in progress') || errorMessage.includes('Invalid')) {
+      res.status(400).json({ error: errorMessage });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
 // PUT /api/games/:code/players/color - Update authenticated player's color
 router.put('/:code/players/color', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {

@@ -193,7 +193,7 @@ This rule adds strategic depth: players must plan their moves to reach the next 
 - **Active Gameplay**: Players take turns
 - **Turn Structure**: Each turn has two phases (shift → move)
 - **Actions Allowed**:
-  - Shift row/column (shift phase) - *implementation in progress*
+  - Shift row/column (shift phase) - *implemented*
   - Move player piece (move phase) - *implementation in progress*
   - Collect tokens (automatic when landing on token position) - *not yet implemented*
 
@@ -211,16 +211,19 @@ Each player's turn consists of two mandatory phases:
 
 **Objective**: Shift the maze to create a path for movement
 
-**Mechanics** (*in development*):
+**Mechanics** (*implemented*):
 1. Player rotates the "tile in play" to desired orientation (0-3 × 90°)
-2. Player selects a row or column to shift
+2. Player selects a row or column to shift (indices 1, 3, or 5 only)
 3. The tile in play is inserted, pushing all tiles in that row/column
 4. The tile pushed off the board becomes the new "tile in play"
-5. Player positions and token positions shift with the tiles. Players and tokens that were pushed off the board will be placed on the newly inserted tile on the other side.
+5. Player positions and token positions shift with the tiles. Players and tokens that were pushed off the board are placed on the newly inserted tile on the other side.
+6. Phase transitions from "shift" to "move"
+
+**API:** `POST /api/games/:code/shift` with `{ tile, shiftType, shiftIndex, direction }`
 
 **Restrictions** (*planned*):
-- Cannot reverse the previous player's shift immediately
-- Must shift before moving
+- Cannot reverse the previous player's shift immediately (not yet enforced)
+- Must shift before moving (enforced)
 
 ### Phase 2: Move
 
@@ -309,13 +312,15 @@ Player 3: Shift → Move → Next Player
 - ✅ Turn tracking (current player and phase)
 - ✅ Client-side tile rotation animation
 - ✅ Tile rendering with SVG paths
+- ✅ Shift phase mechanics (inserting tile, pushing row/column)
+- ✅ Shift animation (tiles, players, tokens slide with 300ms animation)
+- ✅ Phase transition (shift → move) after shift action
 
 ### In Development
 
-- 🚧 Shift phase mechanics (inserting tile, pushing row/column)
 - 🚧 Move phase mechanics (pathfinding, movement validation)
 - 🚧 Token collection on landing
-- 🚧 Turn progression (phase and player transitions)
+- 🚧 Turn progression (move phase completion, advancing to next player)
 
 ### Not Yet Implemented
 

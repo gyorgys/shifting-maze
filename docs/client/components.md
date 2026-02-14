@@ -308,23 +308,25 @@ interface GamePageProps {
   1. Info panel (left) showing:
      - Game stage
      - Players list with color indicators (current player shown in bold with phase name)
+     - Shift error messages
   2. Game board (center, via GameBoard component)
   3. Tile in play panel (right) showing:
      - Current tile in play with animated rotation
      - Rotation controls (enabled during shift phase for current player)
 - Fallback message if board state is not available
-- **Rotation Animation:**
-  - Maintains `rotationAngle` state (in degrees) separate from tile bitmask data
-  - Visual rotation (CSS transform) animates smoothly over 300ms
-  - Data rotation (bitmask) updates immediately for correct game state
-  - Rotation angle accumulates (doesn't wrap to 0-360) for smooth continuous rotation
-  - Resets to 0° when new tile appears
+- **Shift Phase Flow:**
+  - Orchestrates shift animation → server request → state update
+  - Sends `performShift()` API call after GameBoard animation completes
+  - Updates game state with server response (server is source of truth)
+  - On error: shows error message and re-fetches game state to re-sync
+  - Controls disabled during shift (prevents double-shifts)
 
 **States:**
 - **Loading:** "Loading game..."
 - **Error:** Error message displayed
 - **Not Found:** "Game not found"
 - **Success:** Full game view with board
+- **Shifting:** Controls disabled, waiting for server response
 
 **Styling:**
 - Uses CSS classes from main.css
@@ -357,7 +359,9 @@ interface GameBoardProps {
   board: Tile[][];                            // 7x7 tile matrix
   playerPositions: { [color: string]: Position };
   tokenPositions: { [tokenId: string]: Position };
+  tileInPlay: Tile;                           // The tile to be pushed in
   controlsEnabled: boolean;                   // Whether shift controls are active
+  onShiftComplete?: (shift: ShiftRequest) => void;  // Callback after shift animation
 }
 ```
 
@@ -368,12 +372,21 @@ interface GameBoardProps {
 - Handles multiple items on same tile with 2×2 grid layout
 - Fixed tile size (80px)
 - Black border around board
+- **Shift Animation:**
+  - 300ms CSS transition for tiles, players, and tokens in the shifted row/column
+  - Tile-in-play slides in from the edge during animation
+  - Pushed-out tile slides out and is clipped at the board edge
+  - Uses `requestAnimationFrame` to ensure initial position renders before animation starts
+  - Preview tile shown on hover (semi-transparent at insertion point)
+  - Controls disabled during animation
 
 **Visual Components:**
 - Tiles with paths (via Tile component)
 - Tokens with values (via Token component)
 - Player markers (via PlayerMarker component)
 - Shift control arrows (orange when enabled, gray when disabled)
+- Preview tile (semi-transparent, shown on arrow hover)
+- Clip path to hide tiles sliding beyond board boundaries
 
 **Styling:**
 - SVG container uses `svg-board` CSS class
@@ -386,7 +399,9 @@ interface GameBoardProps {
   board={game.board}
   playerPositions={game.playerPositions}
   tokenPositions={game.tokenPositions}
-  controlsEnabled={currentPlayer && shiftPhase}
+  tileInPlay={rotatedTile}
+  controlsEnabled={controlsEnabled}
+  onShiftComplete={handleShiftComplete}
 />
 ```
 

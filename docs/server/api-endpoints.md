@@ -579,6 +579,65 @@ Authorization: Bearer <your-jwt-token>
 
 ---
 
+### Perform Shift
+
+Performs a shift action during the shift phase of the current player's turn. Inserts the tile in play into the board by pushing a row or column.
+
+**Endpoint:** `POST /api/games/:code/shift`
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "tile": 10,
+  "shiftType": "row",
+  "shiftIndex": 3,
+  "direction": "right"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `tile` | `number` | The rotated tile to insert (0-15 bitmask) |
+| `shiftType` | `string` | `"row"` or `"column"` |
+| `shiftIndex` | `number` | Which row/column to shift (1, 3, or 5) |
+| `direction` | `string` | `"left"` / `"right"` for rows, `"up"` / `"down"` for columns |
+
+**Success Response (200):**
+
+Returns the full game state (same format as Get Game Details), with:
+- `currentPhase` advanced to `"move"`
+- `board` updated with shifted tiles
+- `tileInPlay` set to the tile that was pushed off the board
+- `playerPositions` and `tokenPositions` updated (entities in the shifted row/column move with their tiles; entities pushed off wrap to the opposite side)
+
+**Error Responses:**
+
+| Status | Condition |
+|--------|-----------|
+| 400 | Invalid tile value, shift type, shift index, or direction |
+| 403 | Not the current player's turn, or not in shift phase |
+| 404 | Game not found |
+| 500 | Internal server error |
+
+**Validation:**
+- Authenticated user must be a player in the game
+- It must be the user's turn (`currentPlayerIndex` matches)
+- Game must be in `shift` phase
+- `shiftIndex` must be 1, 3, or 5 (odd indices only; even indices have fixed tiles)
+- `tile` must be 0-15
+
+**Game State Changes:**
+- Board row/column is shifted, inserting the provided tile
+- The tile pushed off becomes the new `tileInPlay`
+- Player and token positions in the shifted row/column are updated
+- `currentPhase` changes from `"shift"` to `"move"`
+
+**Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts), [server/src/utils/shiftUtils.ts](../../server/src/utils/shiftUtils.ts)
+
+---
+
 ## Authentication Flow
 
 The system uses client-side password hashing and JWT tokens for security:

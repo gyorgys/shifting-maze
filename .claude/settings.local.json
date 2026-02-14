@@ -20,7 +20,10 @@
       "Bash(npm run dev:*)",
       "Bash(git pull:*)",
       "Bash(git stash:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(node -e:*)",
+      "Bash(kill:*)",
+      "Bash(lsof:*)"
     ]
   }
 }
