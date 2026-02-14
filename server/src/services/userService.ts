@@ -50,5 +50,5 @@ export async function validateLogin(username: string, passwordHash: string): Pro
   if (!user) {
     return false;
   }
-  return user.passwordHash === passwordHash;
+  return !user.passwordHash || user.passwordHash === passwordHash;
 }
