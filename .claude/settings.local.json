@@ -28,7 +28,8 @@
       "Bash(mv .claude/skills/test-create-users.md .claude/skills/test-create-users/SKILL.md && mv .claude/skills/test-start-game.md .claude/skills/test-start-game/SKILL.md && mv .claude/skills/test-join-game.md .claude/skills/test-join-game/SKILL.md && mv .claude/skills/test-make-move.md .claude/skills/test-make-move/SKILL.md)",
       "Bash(ls ~/.claude/commands/ 2>/dev/null && cat ~/.claude/commands/*.md 2>/dev/null | head -20 || echo \"no global commands dir\")",
       "mcp__plugin_playwright_playwright__browser_navigate",
-      "mcp__plugin_playwright_playwright__browser_evaluate"
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot"
     ]
   }
 }
