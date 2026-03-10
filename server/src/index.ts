@@ -3,6 +3,7 @@ import cors from 'cors';
 import { getHome } from './routes/home';
 import userRoutes from './routes/users';
 import gameRoutes from './routes/games';
+import testRoutes from './routes/test';
 
 const app: Express = express();
 const PORT = 3001;
@@ -18,6 +19,7 @@ app.use(express.json());
 app.get('/api/home', getHome);
 app.use('/api/users', userRoutes);
 app.use('/api/games', gameRoutes);
+app.use('/api/test', testRoutes);
 
 // Start server
 app.listen(PORT, () => {

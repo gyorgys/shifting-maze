@@ -58,6 +58,10 @@ export function getUserFilePath(username: string): string {
   return path.join(USERS_DIR, `${username}.json`);
 }
 
+export async function deleteFile(filePath: string): Promise<void> {
+  await fs.unlink(filePath);
+}
+
 export function getGameFilePath(code: string): string {
   // Validate to prevent path traversal
   if (code.includes('..') || code.includes('/') || code.includes('\\')) {

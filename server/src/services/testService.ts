@@ -1,9 +1,75 @@
+import crypto from 'crypto';
 import * as gameService from './gameService';
 import * as userService from './userService';
+import * as storage from '../utils/fileStorage';
+import { generateToken } from '../middleware/auth';
 import { shiftRow, shiftColumn, updatePositionsInRow, updatePositionsInColumn } from '../utils/shiftUtils';
 import { findReachableTiles } from '@shared/utils/pathfinding';
 import { rotateTileNTimes } from '@shared/utils/tileUtils';
 import type { Position, Tile } from '../models/Game';
+import type { User } from '../models/User';
+import type { Game } from '../models/Game';
+
+const USERS_DIR = storage.getUserFilePath('x').replace(/[^/]*$/, '');
+const GAMES_DIR = storage.getGameFilePath('x').replace(/[^/]*$/, '');
+
+export async function createTestUser(
+  username: string,
+  displayName: string
+): Promise<{ username: string; displayName: string; token: string }> {
+  await userService.createUser({
+    username,
+    displayName,
+    passwordHash: '',
+    salt: crypto.randomBytes(32).toString('hex'),
+  });
+  const token = generateToken(username, displayName);
+  return { username, displayName, token };
+}
+
+export async function cleanupTestData(): Promise<{ deletedUsers: string[]; deletedGames: string[] }> {
+  const userFiles = await storage.listFiles(USERS_DIR);
+  const testUsernames: string[] = [];
+
+  for (const file of userFiles) {
+    if (!file.endsWith('.json')) continue;
+    const filePath = USERS_DIR + file;
+    const user = await storage.readJsonFile<User>(filePath);
+    if (user && user.passwordHash === '') {
+      testUsernames.push(user.username);
+    }
+  }
+
+  const gameFiles = await storage.listFiles(GAMES_DIR);
+  const gameCodesToDelete = new Set<string>();
+
+  for (const file of gameFiles) {
+    if (!file.endsWith('.json')) continue;
+    const filePath = GAMES_DIR + file;
+    const game = await storage.readJsonFile<Game>(filePath);
+    if (game && game.players.some(p => testUsernames.includes(p.username))) {
+      gameCodesToDelete.add(game.code);
+    }
+  }
+
+  const deletedGames: string[] = [];
+  for (const code of gameCodesToDelete) {
+    try {
+      await storage.deleteFile(storage.getGameFilePath(code));
+      deletedGames.push(code);
+    } catch { /* already missing */ }
+  }
+
+  const deletedUsers: string[] = [];
+  for (const username of testUsernames) {
+    try {
+      await storage.deleteFile(storage.getUserFilePath(username));
+      deletedUsers.push(username);
+    } catch { /* already missing */ }
+  }
+
+  return { deletedUsers, deletedGames };
+}
 
 type Board = Tile[][];
 type Positions = { [key: string]: Position };
