@@ -34,6 +34,8 @@ export interface Game {
 
   // Game stage tracking
   stage: GameStage;  // 'unstarted' when waiting for players, 'playing' during game, 'finished' when complete
+  finishedAt?: string;  // ISO timestamp when game finished
+  scores?: { [color: string]: number };  // Final scores per player color (set when game finishes)
 
   // Player tracking (2-4 players required to play)
   players: Player[];  // Players with their chosen colors, order is randomized at game start

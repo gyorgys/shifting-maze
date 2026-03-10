@@ -34,6 +34,10 @@ export interface Game {
   availableColors?: PlayerColor[];
   currentTurn?: CurrentTurn;
 
+  // Finished game info
+  finishedAt?: string;
+  scores?: { [color: string]: number };
+
   // Board state (only present when stage is 'playing' or 'finished')
   board?: Tile[][];  // 7x7 matrix of tiles
   tileInPlay?: Tile;

@@ -225,6 +225,7 @@ interface GamesListProps {
   user: User;                                 // Current authenticated user
   refresh: number;                            // Increment to trigger re-fetch
   onViewGame?: (gameCode: string) => void;    // Callback when viewing a game (navigates to /game/:code)
+  onViewHistory?: () => void;                 // Callback to navigate to Game History page
 }
 ```
 
@@ -281,6 +282,31 @@ const navigate = useNavigate();
   onSuccess={() => setRefreshGames(prev => prev + 1)}
 />
 ```
+
+---
+
+### GameHistoryPage
+
+Displays the user's finished games, sorted by most recent first.
+
+**File:** [client/src/components/GameHistoryPage.tsx](../../client/src/components/GameHistoryPage.tsx)
+
+**Props:**
+```typescript
+interface GameHistoryPageProps {
+  user: User;   // Current authenticated user
+}
+```
+
+**Features:**
+- Fetches finished games on mount via `listGames(token, true)` (`?finished=true`)
+- Sorted most-recent-first by `finishedAt`
+- Each game shows: finish timestamp, game name, players sorted by score descending
+- Winner (highest score) displayed in bold
+- Format: `[finishedAt]  [game name]  [winner bold + score]  [p2 + score]  ...`
+- Falls back to "—" for `finishedAt` on older games without the field
+
+**Routing:** Accessible at `/history`. Rendered inside `GameHistoryPageWrapper` in App.tsx, which includes an AppHeader with a back ← button.
 
 ---
 

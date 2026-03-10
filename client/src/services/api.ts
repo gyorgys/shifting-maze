@@ -148,9 +148,10 @@ export async function createGame(
   }
 }
 
-export async function listGames(token: string): Promise<Game[]> {
+export async function listGames(token: string, finished?: boolean): Promise<Game[]> {
   try {
-    const data = await jsonRequest<{ games: Game[] }>('/api/games', { token });
+    const url = finished ? '/api/games?finished=true' : '/api/games';
+    const data = await jsonRequest<{ games: Game[] }>(url, { token });
     return data.games;
   } catch (error) {
     console.error('List games error:', error);

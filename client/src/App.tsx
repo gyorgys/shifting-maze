@@ -7,6 +7,7 @@ import { GamesList } from './components/GamesList';
 import { CreateGameForm } from './components/CreateGameForm';
 import { JoinGameForm } from './components/JoinGameForm';
 import { GamePage } from './components/GamePage';
+import { GameHistoryPage } from './components/GameHistoryPage';
 import { AppHeader } from './components/AppHeader';
 
 type AuthView = 'login' | 'create';
@@ -36,6 +37,13 @@ function App() {
         <Route path="/game/:code" element={
           user ? (
             <GameDetailPageWrapper user={user} logout={logout} />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        } />
+        <Route path="/history" element={
+          user ? (
+            <GameHistoryPageWrapper user={user} logout={logout} />
           ) : (
             <Navigate to="/" replace />
           )
@@ -110,24 +118,28 @@ function HomePage({ user, logout }: { user: any; logout: () => void }) {
         onLogout={logout}
       />
       <div className="px-20" data-testid="home-page">
-        <h2>Create New Game</h2>
-        <CreateGameForm
-          user={user}
-          onSuccess={(code, name) => {
-            alert(`Game created! Code: ${code}\nName: ${name}`);
-            setRefreshGames(prev => prev + 1);
-          }}
-        />
+        <div className="flex flex-wrap gap-20 mb-20">
+          <div className="flex-1">
+            <h2>Create New Game</h2>
+            <CreateGameForm
+              user={user}
+              onSuccess={(code, name) => {
+                alert(`Game created! Code: ${code}\nName: ${name}`);
+                setRefreshGames(prev => prev + 1);
+              }}
+            />
+          </div>
 
-        <hr className="divider" />
-
-        <h2>Join Game</h2>
-        <JoinGameForm
-          user={user}
-          onSuccess={() => {
-            setRefreshGames(prev => prev + 1);
-          }}
-        />
+          <div className="flex-1">
+            <h2>Join Game</h2>
+            <JoinGameForm
+              user={user}
+              onSuccess={() => {
+                setRefreshGames(prev => prev + 1);
+              }}
+            />
+          </div>
+        </div>
 
         <hr className="divider" />
 
@@ -135,6 +147,7 @@ function HomePage({ user, logout }: { user: any; logout: () => void }) {
           user={user}
           refresh={refreshGames}
           onViewGame={navigateToGame}
+          onViewHistory={() => navigate('/history')}
         />
       </div>
     </>
@@ -182,6 +195,35 @@ function GameDetailPageWrapper({ user, logout }: { user: any; logout: () => void
       <div className="px-20">
         <GamePage gameCode={code} user={user} onGameLoaded={setGameName} />
       </div>
+    </>
+  );
+}
+
+// Game history page wrapper
+function GameHistoryPageWrapper({ user, logout }: { user: any; logout: () => void }) {
+  const navigate = useNavigate();
+
+  const headerContent = (
+    <div className="flex items-center gap-10">
+      <button
+        onClick={() => navigate('/')}
+        title="Back to Games"
+        className="btn-link title"
+      >
+        ←
+      </button>
+      <h2 className="subtitle">Game History</h2>
+    </div>
+  );
+
+  return (
+    <>
+      <AppHeader
+        content={headerContent}
+        username={user.displayName}
+        onLogout={logout}
+      />
+      <GameHistoryPage user={user} />
     </>
   );
 }

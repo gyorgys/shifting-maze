@@ -77,8 +77,13 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
 // GET /api/games - List games for authenticated user
 router.get('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
-    // Get games for authenticated user
-    const games = await gameService.listGamesByUser(req.user!.username);
+    const finished = req.query.finished === 'true';
+    const allGames = await gameService.listGamesByUser(req.user!.username);
+
+    // Filter by finished/active
+    const games = allGames.filter(game =>
+      finished ? game.stage === 'finished' : game.stage !== 'finished'
+    );
 
     // Format response with enhanced game state information
     res.status(200).json({
@@ -91,6 +96,11 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
           stage: game.stage,
           players: game.players,  // Always include players with their colors
         };
+
+        // Finished games: include finishedAt and scores
+        if (game.stage === 'finished') {
+          return { ...baseInfo, finishedAt: game.finishedAt, scores: game.scores ?? {} };
+        }
 
         // Add available colors if game can be joined (unstarted and not full)
         if (game.stage === 'unstarted' && game.players.length < game.maxPlayers) {

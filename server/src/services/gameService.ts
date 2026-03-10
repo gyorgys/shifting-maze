@@ -342,6 +342,12 @@ export async function performMove(
       const totalCollected = Object.values(game.collectedTokens!).reduce((sum, arr) => sum + arr.length, 0);
       if (totalCollected >= 21) {
         game.stage = 'finished';
+        game.finishedAt = new Date().toISOString();
+        game.scores = {};
+        for (const player of game.players) {
+          const tokens = game.collectedTokens?.[player.color] ?? [];
+          game.scores[player.color] = tokens.reduce((sum, id) => sum + (id <= 19 ? id + 1 : 25), 0);
+        }
         delete game.currentPhase;
         delete game.currentPlayerIndex;
         await saveGame(game);
@@ -383,6 +389,12 @@ export async function resignGame(code: string, username: string): Promise<Game> 
       game.tokenPositions = {};
     }
     game.stage = 'finished';
+    game.finishedAt = new Date().toISOString();
+    game.scores = {};
+    for (const player of game.players) {
+      const tokens = game.collectedTokens?.[player.color] ?? [];
+      game.scores[player.color] = tokens.reduce((sum, id) => sum + (id <= 19 ? id + 1 : 25), 0);
+    }
     delete game.currentPhase;
     delete game.currentPlayerIndex;
   } else {

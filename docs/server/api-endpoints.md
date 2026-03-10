@@ -199,11 +199,14 @@ Authorization: Bearer <your-jwt-token>
 
 ### List Games
 
-Retrieves all games that the authenticated user is part of, with detailed state information including available colors for joinable games and current turn info for games in progress.
+Retrieves games that the authenticated user is part of. By default returns only active (unstarted + playing) games. Pass `?finished=true` to retrieve finished games instead.
 
 **Endpoint:** `GET /api/games`
 
 **Authentication:** Required
+
+**Query Parameters:**
+- `finished` (optional) - Set to `true` to return finished games only; omit or set to `false` for active games
 
 **Headers:**
 ```
@@ -257,7 +260,7 @@ The response includes different fields based on the game's stage:
 }
 ```
 
-**Example - Finished game:**
+**Example - Finished game (returned with `?finished=true`):**
 ```json
 {
   "games": [
@@ -271,7 +274,9 @@ The response includes different fields based on the game's stage:
         { "username": "bob", "color": "red" },
         { "username": "charlie", "color": "green" },
         { "username": "diana", "color": "white" }
-      ]
+      ],
+      "finishedAt": "2026-03-10T14:30:00.000Z",
+      "scores": { "blue": 42, "red": 35, "green": 28, "white": 20 }
     }
   ]
 }
@@ -288,6 +293,8 @@ The response includes different fields based on the game's stage:
   - `username` - Whose turn it is
   - `color` - That player's color
   - `phase` - Current turn phase ("shift" or "move")
+- `finishedAt` - (Only for finished games) ISO 8601 timestamp when the game ended
+- `scores` - (Only for finished games) Map of player color to final score
 
 **Error Responses:**
 - `401 Unauthorized` - No authentication token provided

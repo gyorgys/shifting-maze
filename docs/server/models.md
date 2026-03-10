@@ -150,6 +150,8 @@ interface Game {
 
   // Game stage tracking
   stage: GameStage;        // 'unstarted' | 'playing' | 'finished'
+  finishedAt?: string;     // ISO 8601 timestamp when game finished (set when stage becomes 'finished')
+  scores?: { [color: string]: number }; // Final scores per player color (set when stage becomes 'finished')
 
   // Player tracking (2-4 players required to play)
   players: Player[];       // Players with their chosen colors

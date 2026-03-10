@@ -7,9 +7,10 @@ interface GamesListProps {
   user: User;
   refresh: number;
   onViewGame?: (gameCode: string) => void;
+  onViewHistory?: () => void;
 }
 
-export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
+export function GamesList({ user, refresh, onViewGame, onViewHistory }: GamesListProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,9 +103,28 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
     );
   }
 
+  const heading = (
+    <div className="flex items-center gap-10 mb-15">
+      <h3 className="subtitle m-0">Your Games</h3>
+      {onViewHistory && (
+        <button onClick={onViewHistory} className="btn-link text-normal">
+          Game History →
+        </button>
+      )}
+      <button
+        onClick={fetchGames}
+        className="btn btn-sm btn-secondary"
+        data-testid="games-refresh-button"
+      >
+        Refresh
+      </button>
+    </div>
+  );
+
   if (games.length === 0) {
     return (
       <div className="p-20" data-testid="games-empty">
+        {heading}
         <p>No games yet. Create or join a game to get started!</p>
       </div>
     );
@@ -112,16 +132,7 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
 
   return (
     <div className="p-20" data-testid="games-list">
-      <div className="flex justify-between items-center mb-15">
-        <h3 className="subtitle m-0">Your Games</h3>
-        <button
-          onClick={fetchGames}
-          className="btn btn-sm btn-secondary"
-          data-testid="games-refresh-button"
-        >
-          Refresh
-        </button>
-      </div>
+      {heading}
       <ul className="list-unstyled">
         {games.map((game) => {
           const currentColor = getCurrentPlayerColor(game);
