@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Tile as TileComponent } from './Tile';
 import { Token } from './Token';
 import { PlayerMarker } from './PlayerMarker';
 import { Tile as TileType, Position } from '../types/Game';
 import { ShiftRequest } from '../services/api';
 import { calculateGridPosition, getItemsAtPosition } from '../utils/gridPositioning';
+import { findReachableTiles, findPath } from '@shared/utils/pathfinding';
 
 interface GameBoardProps {
   board: TileType[][];  // 7x7 tile matrix
@@ -12,7 +13,10 @@ interface GameBoardProps {
   tokenPositions: { [tokenId: string]: Position };
   tileInPlay: TileType;  // The tile that will be pushed in
   controlsEnabled: boolean;  // Whether shift controls are active
+  moveControlsEnabled: boolean;  // Whether move controls are active
+  currentPlayerColor?: string;  // Color of the local user's piece
   onShiftComplete?: (shift: ShiftRequest) => void;
+  onMoveComplete?: (row: number, col: number) => void;
 }
 
 export const TILE_SIZE = 80;
@@ -43,12 +47,17 @@ export function GameBoard({
   tokenPositions,
   tileInPlay,
   controlsEnabled,
+  moveControlsEnabled,
+  currentPlayerColor,
   onShiftComplete,
+  onMoveComplete,
 }: GameBoardProps) {
   const [hoveredArrow, setHoveredArrow] = useState<HoverState>(null);
   const [shiftAnimation, setShiftAnimation] = useState<ShiftAnimationState | null>(null);
   const [animating, setAnimating] = useState(false);
   const animationTimeoutRef = useRef<number | null>(null);
+  const [hoveredTile, setHoveredTile] = useState<Position | null>(null);
+  const pathCache = useRef<Map<string, Position[] | null>>(new Map());
 
   const boardSize = 7 * TILE_SIZE;
   const shiftableIndices = [1, 3, 5]; // Rows/columns that can be shifted
@@ -64,6 +73,31 @@ export function GameBoard({
       }
     };
   }, []);
+
+  const playerPos = moveControlsEnabled && currentPlayerColor
+    ? (playerPositions[currentPlayerColor] ?? null)
+    : null;
+
+  // Single BFS — reachable set for highlight and click guards
+  const reachableTiles = useMemo((): Set<string> => {
+    if (!playerPos || !moveControlsEnabled) return new Set();
+    return new Set(findReachableTiles(board, playerPos).map(([r, c]) => `${r},${c}`));
+  }, [board, playerPos, moveControlsEnabled]);
+
+  // Clear path cache whenever board or player position changes
+  useEffect(() => {
+    pathCache.current.clear();
+  }, [board, playerPos]);
+
+  function getPath(row: number, col: number): Position[] | null {
+    const key = `${row},${col}`;
+    if (!pathCache.current.has(key)) {
+      pathCache.current.set(key, playerPos ? findPath(board, playerPos, [row, col]) : null);
+    }
+    return pathCache.current.get(key) ?? null;
+  }
+
+  const hoveredPath = hoveredTile ? getPath(hoveredTile[0], hoveredTile[1]) : null;
 
   const handleShiftRow = (row: number, direction: 'left' | 'right') => {
     if (!controlsEnabled || animating) return;
@@ -360,6 +394,16 @@ export function GameBoard({
                     y={rowIdx * TILE_SIZE}
                     size={TILE_SIZE}
                   />
+                  {moveControlsEnabled && reachableTiles.has(`${rowIdx},${colIdx}`) && (
+                    <rect
+                      x={colIdx * TILE_SIZE + 1}
+                      y={rowIdx * TILE_SIZE + 1}
+                      width={TILE_SIZE - 2}
+                      height={TILE_SIZE - 2}
+                      fill="rgba(255,255,255,0.25)"
+                      pointerEvents="none"
+                    />
+                  )}
                 </g>
               );
             })
@@ -454,6 +498,44 @@ export function GameBoard({
               </g>
             );
           })}
+
+          {/* Move hit-area rects — rendered on top of tokens/players to capture hover/click */}
+          {moveControlsEnabled && board.map((row, rowIdx) =>
+            row.map((_tile, colIdx) => (
+              <rect
+                key={`hit-${rowIdx}-${colIdx}`}
+                x={colIdx * TILE_SIZE}
+                y={rowIdx * TILE_SIZE}
+                width={TILE_SIZE}
+                height={TILE_SIZE}
+                fill="transparent"
+                className={reachableTiles.has(`${rowIdx},${colIdx}`) ? 'cursor-pointer' : 'cursor-default'}
+                onMouseEnter={() => setHoveredTile([rowIdx, colIdx])}
+                onMouseLeave={() => setHoveredTile(null)}
+                onClick={() => {
+                  if (reachableTiles.has(`${rowIdx},${colIdx}`)) {
+                    onMoveComplete?.(rowIdx, colIdx);
+                  }
+                }}
+              />
+            ))
+          )}
+
+          {/* Path overlay for move phase */}
+          {hoveredPath && currentPlayerColor && (
+            <polyline
+              points={hoveredPath.map(([r, c]) =>
+                `${c * TILE_SIZE + TILE_SIZE / 2},${r * TILE_SIZE + TILE_SIZE / 2}`
+              ).join(' ')}
+              fill="none"
+              stroke={currentPlayerColor}
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={0.85}
+              pointerEvents="none"
+            />
+          )}
         </g>
 
         {/* Preview tile (shown when hovering over arrows) - rendered last with pointer-events: none */}

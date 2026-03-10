@@ -271,6 +271,110 @@ router.post('/:code/shift', authenticateToken, async (req: Request, res: Respons
   }
 });
 
+// POST /api/games/:code/move - Perform a move action during the move phase
+router.post('/:code/move', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { code } = req.params;
+    const { row, col } = req.body;
+    const username = req.user!.username;
+
+    // Validate request body
+    if (!Number.isInteger(row) || row < 0 || row > 6) {
+      res.status(400).json({ error: 'Invalid row (must be integer 0-6)' });
+      return;
+    }
+    if (!Number.isInteger(col) || col < 0 || col > 6) {
+      res.status(400).json({ error: 'Invalid col (must be integer 0-6)' });
+      return;
+    }
+
+    const game = await gameService.performMove(code, username, row, col);
+
+    // Build response (same shape as /shift)
+    const response: Record<string, unknown> = {
+      code: game.code,
+      name: game.name,
+      createdBy: game.createdBy,
+      userCount: game.players.length,
+      stage: game.stage,
+      players: game.players,
+      board: game.board,
+      tileInPlay: game.tileInPlay,
+      playerPositions: game.playerPositions,
+      tokenPositions: game.tokenPositions,
+      collectedTokens: game.collectedTokens,
+    };
+
+    if (game.stage === 'playing' && game.currentPlayerIndex !== undefined) {
+      const currentPlayer = game.players[game.currentPlayerIndex];
+      response.currentTurn = {
+        username: currentPlayer.username,
+        color: currentPlayer.color,
+        phase: game.currentPhase,
+      };
+    }
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Error performing move:', error);
+
+    const errorMessage = (error as Error).message;
+    if (errorMessage.includes('not found')) {
+      res.status(404).json({ error: errorMessage });
+    } else if (
+      errorMessage.includes('Not your turn') ||
+      errorMessage.includes('Not in move phase') ||
+      errorMessage.includes('not in this game') ||
+      errorMessage.includes('unreachable')
+    ) {
+      res.status(403).json({ error: errorMessage });
+    } else if (errorMessage.includes('not in progress') || errorMessage.includes('Invalid')) {
+      res.status(400).json({ error: errorMessage });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+// POST /api/games/:code/resign - Resign from game (ends game immediately)
+router.post('/:code/resign', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { code } = req.params;
+    const username = req.user!.username;
+
+    const game = await gameService.resignGame(code, username);
+
+    const response: Record<string, unknown> = {
+      code: game.code,
+      name: game.name,
+      createdBy: game.createdBy,
+      userCount: game.players.length,
+      stage: game.stage,
+      players: game.players,
+      board: game.board,
+      tileInPlay: game.tileInPlay,
+      playerPositions: game.playerPositions,
+      tokenPositions: game.tokenPositions,
+      collectedTokens: game.collectedTokens,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Error resigning game:', error);
+
+    const errorMessage = (error as Error).message;
+    if (errorMessage.includes('not found')) {
+      res.status(404).json({ error: errorMessage });
+    } else if (errorMessage.includes('Not your turn') || errorMessage.includes('not in this game')) {
+      res.status(403).json({ error: errorMessage });
+    } else if (errorMessage.includes('not in progress')) {
+      res.status(400).json({ error: errorMessage });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
 // PUT /api/games/:code/players/color - Update authenticated player's color
 router.put('/:code/players/color', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {

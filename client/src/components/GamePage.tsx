@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
-import { getGameDetails, performShift, ShiftRequest } from '../services/api';
-import { Game, Tile as TileType } from '../types/Game';
+import { getGameDetails, performShift, performMove, resignGame, ShiftRequest } from '../services/api';
+import { Game, Tile as TileType, TokenId } from '../types/Game';
 import { User } from '../types/User';
 import { GameBoard } from './GameBoard';
 import { TileInPlay } from './TileInPlay';
+import { CollectedTokens } from './CollectedTokens';
+
+function getScore(tokenIds: TokenId[]): number {
+  return tokenIds.reduce((sum, id) => sum + (id <= 19 ? id + 1 : 25), 0);
+}
 
 interface GamePageProps {
   gameCode: string;
@@ -19,6 +24,11 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
   const [rotatedTile, setRotatedTile] = useState<TileType | null>(null);
   const [isShifting, setIsShifting] = useState(false);
   const [shiftError, setShiftError] = useState<string | null>(null);
+  const [isMoving, setIsMoving] = useState(false);
+  const [moveError, setMoveError] = useState<string | null>(null);
+  const [confirmingResign, setConfirmingResign] = useState(false);
+  const [isResigning, setIsResigning] = useState(false);
+  const [resignError, setResignError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadGame() {
@@ -77,6 +87,39 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
     }
   };
 
+  const handleMoveComplete = async (row: number, col: number) => {
+    setIsMoving(true);
+    setMoveError(null);
+    try {
+      const updatedGame = await performMove(gameCode, user.token, { row, col });
+      setGame(updatedGame);
+      if (updatedGame.tileInPlay !== undefined) setRotatedTile(updatedGame.tileInPlay);
+    } catch (err) {
+      setMoveError((err as Error).message);
+      try {
+        const freshGame = await getGameDetails(gameCode, user.token);
+        setGame(freshGame);
+        if (freshGame.tileInPlay !== undefined) setRotatedTile(freshGame.tileInPlay);
+      } catch { /* keep showing error */ }
+    } finally {
+      setIsMoving(false);
+    }
+  };
+
+  const handleResign = async () => {
+    setIsResigning(true);
+    setResignError(null);
+    try {
+      const updatedGame = await resignGame(gameCode, user.token);
+      setGame(updatedGame);
+    } catch (err) {
+      setResignError((err as Error).message);
+    } finally {
+      setIsResigning(false);
+      setConfirmingResign(false);
+    }
+  };
+
   if (loading) {
     return <p>Loading game...</p>;
   }
@@ -89,11 +132,24 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
     return <p>Game not found</p>;
   }
 
+  const isMyTurn = game.currentTurn?.username === user.username;
+
   // Controls are only enabled during shift phase for the current player (and not mid-shift)
-  const controlsEnabled =
-    game.currentTurn?.username === user.username &&
-    game.currentTurn?.phase === 'shift' &&
-    !isShifting;
+  const controlsEnabled = isMyTurn && game.currentTurn?.phase === 'shift' && !isShifting;
+
+  const moveControlsEnabled = isMyTurn && game.currentTurn?.phase === 'move' && !isMoving;
+
+  const myPlayer = game.players.find(p => p.username === user.username);
+
+  const winnerColor: string | null = (() => {
+    if (game.stage !== 'finished' || !game.collectedTokens) return null;
+    let best = -1, bestColor: string | null = null;
+    for (const [color, ids] of Object.entries(game.collectedTokens)) {
+      const score = getScore(ids);
+      if (score > best) { best = score; bestColor = color; }
+    }
+    return bestColor;
+  })();
 
   return (
     <div className="grid-game-page" data-testid="game-page">
@@ -121,6 +177,9 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
                     {isCurrentPlayer && game.currentTurn && (
                       <span> - {game.currentTurn.phase}</span>
                     )}
+                    {game.stage === 'finished' && winnerColor === player.color && (
+                      <span className="text-emphasized"> WINNER!</span>
+                    )}
                   </span>
                 </li>
               );
@@ -128,9 +187,66 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
           </ul>
         </div>
 
+        {/* Collected tokens */}
+        {myPlayer && game.collectedTokens && (
+          <div className="mt-10">
+            <div className="mb-10">
+              <span className="text-emphasized">Your tokens</span>
+              {' '}
+              <span className="text-normal">
+                — {getScore(game.collectedTokens[myPlayer.color] ?? [])} pts
+              </span>
+            </div>
+            <CollectedTokens tokenIds={game.collectedTokens[myPlayer.color] ?? []} />
+          </div>
+        )}
+
+        {/* Resign button */}
+        {game.stage === 'playing' && (
+          <div className="mt-10">
+            {!confirmingResign ? (
+              <button
+                className="btn btn-sm btn-danger"
+                disabled={!isMyTurn || isResigning}
+                onClick={() => setConfirmingResign(true)}
+              >
+                Resign
+              </button>
+            ) : (
+              <div>
+                <span className="text-normal">Resign and end the game?</span>
+                <button
+                  className="btn btn-sm btn-danger"
+                  disabled={isResigning}
+                  onClick={handleResign}
+                >
+                  Yes, resign
+                </button>
+                <button
+                  className="btn btn-sm btn-secondary"
+                  disabled={isResigning}
+                  onClick={() => setConfirmingResign(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            {resignError && (
+              <div className="text-error mt-10" data-testid="game-resign-error">
+                Resign failed: {resignError}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Shift error message */}
         {shiftError && (
           <div className="text-error mt-10" data-testid="game-shift-error">Shift failed: {shiftError}</div>
+        )}
+
+        {/* Move error message */}
+        {moveError && (
+          <div className="text-error mt-10" data-testid="game-move-error">Move failed: {moveError}</div>
         )}
       </div>
 
@@ -142,7 +258,10 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
           tokenPositions={game.tokenPositions}
           tileInPlay={rotatedTile !== null ? rotatedTile : game.tileInPlay}
           controlsEnabled={controlsEnabled}
+          moveControlsEnabled={moveControlsEnabled}
+          currentPlayerColor={game.players.find(p => p.username === user.username)?.color}
           onShiftComplete={handleShiftComplete}
+          onMoveComplete={handleMoveComplete}
         />
       ) : (
         <div className="card p-20">

@@ -594,6 +594,16 @@ body {
   border: 1px solid #000;
 }
 
+/* ============================================
+   16. SPECIAL COMPONENTS
+   ============================================ */
+
+.collected-tokens-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 36px);
+  gap: 4px;
+}
+
 /* Tile rotation animation - only active when wrapped in tile-animating */
 .tile-animating .tile-rotatable {
   transition: transform 300ms ease-in-out;

@@ -236,6 +236,41 @@ export async function performShift(
   }
 }
 
+export interface MoveRequest {
+  row: number;
+  col: number;
+}
+
+export async function performMove(
+  gameCode: string,
+  token: string,
+  move: MoveRequest
+): Promise<Game> {
+  try {
+    return await jsonRequest<Game>(`/api/games/${gameCode}/move`, {
+      method: 'POST',
+      token,
+      body: move,
+    });
+  } catch (error) {
+    console.error('Perform move error:', error);
+    throw error;
+  }
+}
+
+export async function resignGame(gameCode: string, token: string): Promise<Game> {
+  try {
+    return await jsonRequest<Game>(`/api/games/${gameCode}/resign`, {
+      method: 'POST',
+      token,
+      body: {},
+    });
+  } catch (error) {
+    console.error('Resign error:', error);
+    throw error;
+  }
+}
+
 export async function startGame(gameCode: string, token: string): Promise<void> {
   try {
     await jsonRequest<void>(`/api/games/${gameCode}/start`, {

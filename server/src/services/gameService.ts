@@ -3,6 +3,7 @@ import * as storage from '../utils/fileStorage';
 import { isValidGameName, generateGameCode } from '../utils/validation';
 import { initializeBoard, initializeTokens } from '../utils/boardUtils';
 import { shiftRow, shiftColumn, updatePositionsInRow, updatePositionsInColumn } from '../utils/shiftUtils';
+import { findReachableTiles } from '@shared/utils/pathfinding';
 
 async function generateUniqueGameCode(): Promise<string> {
   let attempts = 0;
@@ -287,6 +288,94 @@ export async function performShift(
   game.currentPhase = 'move';
 
   // Save and return
+  const gamePath = storage.getGameFilePath(code);
+  await storage.writeJsonFile(gamePath, game);
+  return game;
+}
+
+// Perform a move action during the move phase of a player's turn
+export async function performMove(
+  code: string,
+  username: string,
+  row: number,
+  col: number
+): Promise<Game> {
+  const game = await getGameByCode(code);
+  if (!game) {
+    throw new Error('Game not found');
+  }
+
+  if (game.stage !== 'playing') {
+    throw new Error('Game is not in progress');
+  }
+
+  const playerIndex = game.players.findIndex(p => p.username === username);
+  if (playerIndex === -1) {
+    throw new Error('User is not in this game');
+  }
+  if (game.currentPlayerIndex !== playerIndex) {
+    throw new Error('Not your turn');
+  }
+  if (game.currentPhase !== 'move') {
+    throw new Error('Not in move phase');
+  }
+
+  const player = game.players[playerIndex];
+  const from = game.playerPositions![player.color];
+  const reachable = findReachableTiles(game.board!, from);
+  const isReachable = reachable.some(([r, c]) => r === row && c === col);
+  if (!isReachable) {
+    throw new Error('Destination is unreachable');
+  }
+
+  // Move player
+  game.playerPositions![player.color] = [row, col];
+
+  // Token collection: find the lowest tokenId still on the board
+  const tokenIds = Object.keys(game.tokenPositions!).map(Number).sort((a, b) => a - b);
+  if (tokenIds.length > 0) {
+    const lowestId = tokenIds[0];
+    const tokenPos = game.tokenPositions![lowestId];
+    if (tokenPos[0] === row && tokenPos[1] === col) {
+      delete game.tokenPositions![lowestId];
+      game.collectedTokens![player.color].push(lowestId);
+
+      // Check for game end: all 21 tokens collected
+      const totalCollected = Object.values(game.collectedTokens!).reduce((sum, arr) => sum + arr.length, 0);
+      if (totalCollected >= 21) {
+        game.stage = 'finished';
+        delete game.currentPhase;
+        delete game.currentPlayerIndex;
+        const gamePath = storage.getGameFilePath(code);
+        await storage.writeJsonFile(gamePath, game);
+        return game;
+      }
+    }
+  }
+
+  // Advance turn
+  game.currentPlayerIndex = (playerIndex + 1) % game.players.length;
+  game.currentPhase = 'shift';
+
+  const gamePath = storage.getGameFilePath(code);
+  await storage.writeJsonFile(gamePath, game);
+  return game;
+}
+
+// Resign from a game - ends the game immediately
+export async function resignGame(code: string, username: string): Promise<Game> {
+  const game = await getGameByCode(code);
+  if (!game) throw new Error('Game not found');
+  if (game.stage !== 'playing') throw new Error('Game is not in progress');
+
+  const playerIndex = game.players.findIndex(p => p.username === username);
+  if (playerIndex === -1) throw new Error('User is not in this game');
+  if (game.currentPlayerIndex !== playerIndex) throw new Error('Not your turn');
+
+  game.stage = 'finished';
+  delete game.currentPhase;
+  delete game.currentPlayerIndex;
+
   const gamePath = storage.getGameFilePath(code);
   await storage.writeJsonFile(gamePath, game);
   return game;

@@ -638,6 +638,58 @@ Returns the full game state (same format as Get Game Details), with:
 
 ---
 
+### Perform Move
+
+Moves the current player's piece to a new position during the move phase. Validates reachability via BFS, collects tokens, and advances the turn.
+
+**Endpoint:** `POST /api/games/:code/move`
+
+**Authentication:** Required
+
+**Request body:**
+```json
+{
+  "row": 3,
+  "col": 4
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `row` | `number` | Target row (0–6) |
+| `col` | `number` | Target column (0–6) |
+
+**Response:** Full game state (same shape as `POST /api/games/:code/shift`):
+- `playerPositions` updated with the player's new position
+- `tokenPositions` updated if a token was collected (lowest token on board, if it was at the target)
+- `collectedTokens` updated with newly collected token
+- `currentTurn` advanced to next player's shift phase (or absent if game finished)
+- `stage` set to `"finished"` if all 21 tokens have been collected
+
+**Error codes:**
+
+| Code | Reason |
+|------|--------|
+| 400 | Invalid row/col parameters, or game not in progress |
+| 403 | Not your turn, not in move phase, not in game, or destination unreachable |
+| 404 | Game not found |
+| 500 | Internal server error |
+
+**Rules enforced:**
+- Game must be in `move` phase
+- Destination must be reachable from current position via BFS on the current board
+- Only the token with the lowest ID currently on the board can be collected, and only if it's at the target position
+
+**What happens:**
+- Player position is updated to target
+- If the lowest-value token on board is at the target, it is removed from `tokenPositions` and added to `collectedTokens`
+- If all 21 tokens collected, `stage` becomes `"finished"` and turn tracking is cleared
+- Otherwise, turn advances: next player's `currentPhase` is `"shift"`
+
+**Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts), [server/src/services/gameService.ts](../../server/src/services/gameService.ts), [shared/utils/pathfinding.ts](../../shared/utils/pathfinding.ts)
+
+---
+
 ## Authentication Flow
 
 The system uses client-side password hashing and JWT tokens for security:
