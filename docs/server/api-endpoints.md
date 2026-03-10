@@ -690,6 +690,80 @@ Moves the current player's piece to a new position during the move phase. Valida
 
 ---
 
+### Get Possible Moves (Test Users Only)
+
+Returns all legal moves available to the current player, with the board annotated for reachability. This endpoint is restricted to **test users** (users with an empty `passwordHash`) to support automated test clients.
+
+**Endpoint:** `GET /api/games/:code/moves`
+
+**Authentication:** Required (test user only)
+
+**URL Parameters:**
+- `code` - The 4-letter game code
+
+**Success Response (200) — Shift Phase:**
+```json
+{
+  "phase": "shift",
+  "tileInPlay": 10,
+  "currentPlayer": { "color": "red", "username": "bot1", "position": [2, 2] },
+  "otherPlayers": [{ "color": "blue", "username": "bot2", "position": [2, 4] }],
+  "nextTokenToCollect": { "id": 0, "value": 1, "position": [3, 1] },
+  "possibleShifts": [
+    {
+      "shiftType": "row",
+      "shiftIndex": 1,
+      "direction": "left",
+      "rotation": 0,
+      "tileToInsert": 10,
+      "playerPositionAfterShift": [2, 2],
+      "reachableTileCount": 8,
+      "canReachNextToken": true,
+      "board": [ /* 7×7 annotated cells */ ]
+    }
+  ]
+}
+```
+
+**Success Response (200) — Move Phase:**
+```json
+{
+  "phase": "move",
+  "currentPlayer": { "color": "red", "username": "bot1", "position": [2, 2] },
+  "otherPlayers": [{ "color": "blue", "username": "bot2", "position": [2, 4] }],
+  "nextTokenToCollect": { "id": 0, "value": 1, "position": [3, 1], "reachable": true },
+  "board": [ /* 7×7 annotated cells */ ],
+  "reachableTiles": [[2,2], [2,3], [3,1]]
+}
+```
+
+**Cell Format** (used in every `board` array):
+```json
+{ "tile": 10, "reachable": true, "token": 3, "players": ["red"] }
+```
+- `tile` — bitmask (0–15); bit 0=Left, bit 1=Right, bit 2=Top, bit 3=Bottom
+- `reachable` — whether this cell is reachable from the current player's position
+- `token` — token ID number at this cell, or `null`
+- `players` — array of player color strings currently at this cell
+
+**Shift phase notes:**
+- Enumerates all combinations of `shiftType` × `shiftIndex` × `direction` × `rotation`
+- Duplicate entries (same `shiftType`, `shiftIndex`, `direction`, `tileToInsert` after rotation) are collapsed
+- `board` in each entry shows the state *after* the shift, annotated from the player's new position
+- `canReachNextToken` reflects reachability on the post-shift board
+
+**Error Responses:**
+
+| Status | Condition |
+|--------|-----------|
+| 400 | Game not in progress, player not in game, not player's turn |
+| 403 | Caller is not a test user (non-empty `passwordHash`) |
+| 404 | Game not found |
+
+**Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts), [server/src/services/testService.ts](../../server/src/services/testService.ts)
+
+---
+
 ### Poll Game State (Long Poll)
 
 Waits for the game version to increase beyond the provided version, then returns the updated game state. Clients use this to receive other players' actions in near-real-time without polling on a fixed interval.

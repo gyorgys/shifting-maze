@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import * as gameService from '../services/gameService';
+import * as testService from '../services/testService';
 import { Game, CreateGameRequest, JoinGameRequest, UpdatePlayerColorRequest, PlayerColor } from '../models/Game';
 import { authenticateToken } from '../middleware/auth';
 import { gameEmitter } from '../utils/gameEvents';
@@ -353,6 +354,19 @@ router.put('/:code/players/color', authenticateToken, async (req: Request, res: 
     } else {
       res.status(500).json({ error: 'Internal server error' });
     }
+  }
+});
+
+// GET /api/games/:code/moves - Get all possible moves for current player (test users only)
+router.get('/:code/moves', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await testService.getPossibleMoves(req.params.code, req.user!.username);
+    res.json(result);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    if (msg.includes('not found')) res.status(404).json({ error: msg });
+    else if (msg.includes('not authorized') || msg.includes('test')) res.status(403).json({ error: msg });
+    else res.status(400).json({ error: msg });
   }
 });
 
