@@ -29,6 +29,9 @@ export interface Game {
   createdAt: string;
   createdBy: string;
 
+  // Incremented on every state-changing write; used for long polling
+  version: number;
+
   // Game stage tracking
   stage: GameStage;  // 'unstarted' when waiting for players, 'playing' during game, 'finished' when complete
 

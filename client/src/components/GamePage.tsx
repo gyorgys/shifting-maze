@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getGameDetails, performShift, performMove, resignGame, ShiftRequest } from '../services/api';
+import { getGameDetails, performShift, performMove, resignGame, pollGameState, ShiftRequest } from '../services/api';
 import { Game, Tile as TileType, TokenId } from '../types/Game';
 import { User } from '../types/User';
 import { GameBoard } from './GameBoard';
@@ -62,26 +62,58 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
     }
   }, [game?.tileInPlay]);
 
+  // Long-polling loop: keeps game state in sync with other players' actions
+  useEffect(() => {
+    if (!game || game.stage === 'finished') return;
+
+    const controller = new AbortController();
+    let active = true;
+
+    async function poll(version: number) {
+      if (!active) return;
+      try {
+        const result = await pollGameState(gameCode, user.token, version, controller.signal);
+        if (!active) return;
+        if (result.changed) {
+          setGame(result.game);
+          if (result.game.tileInPlay !== undefined) setRotatedTile(result.game.tileInPlay);
+          // game.version changed → effect re-runs → new poll starts automatically
+        } else {
+          poll(version); // timeout with no change — poll again
+        }
+      } catch {
+        if (!active) return;
+        setTimeout(() => poll(version), 3000); // retry after network error
+      }
+    }
+
+    poll(game.version ?? 0);
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [game?.version, game?.stage, gameCode, user.token]);
+
+  // Re-fetch game state after a failed action to keep UI in sync
+  async function resyncGame() {
+    try {
+      const freshGame = await getGameDetails(gameCode, user.token);
+      setGame(freshGame);
+      if (freshGame.tileInPlay !== undefined) setRotatedTile(freshGame.tileInPlay);
+    } catch { /* keep showing the original action error */ }
+  }
+
   const handleShiftComplete = async (shiftRequest: ShiftRequest) => {
     setIsShifting(true);
     setShiftError(null);
-
     try {
       const updatedGame = await performShift(gameCode, user.token, shiftRequest);
       setGame(updatedGame);
       setRotatedTile(updatedGame.tileInPlay!);
     } catch (err) {
       setShiftError((err as Error).message);
-      // Re-fetch game state to re-sync
-      try {
-        const freshGame = await getGameDetails(gameCode, user.token);
-        setGame(freshGame);
-        if (freshGame.tileInPlay !== undefined) {
-          setRotatedTile(freshGame.tileInPlay);
-        }
-      } catch {
-        // If re-fetch also fails, keep showing the error
-      }
+      await resyncGame();
     } finally {
       setIsShifting(false);
     }
@@ -96,11 +128,7 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
       if (updatedGame.tileInPlay !== undefined) setRotatedTile(updatedGame.tileInPlay);
     } catch (err) {
       setMoveError((err as Error).message);
-      try {
-        const freshGame = await getGameDetails(gameCode, user.token);
-        setGame(freshGame);
-        if (freshGame.tileInPlay !== undefined) setRotatedTile(freshGame.tileInPlay);
-      } catch { /* keep showing error */ }
+      await resyncGame();
     } finally {
       setIsMoving(false);
     }

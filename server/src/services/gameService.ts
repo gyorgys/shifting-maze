@@ -4,6 +4,14 @@ import { isValidGameName, generateGameCode } from '../utils/validation';
 import { initializeBoard, initializeTokens } from '../utils/boardUtils';
 import { shiftRow, shiftColumn, updatePositionsInRow, updatePositionsInColumn } from '../utils/shiftUtils';
 import { findReachableTiles } from '@shared/utils/pathfinding';
+import { notifyGameUpdate } from '../utils/gameEvents';
+
+// Increment version, persist to disk, and notify poll listeners
+async function saveGame(game: Game): Promise<void> {
+  game.version = (game.version ?? 0) + 1;
+  await storage.writeJsonFile(storage.getGameFilePath(game.code), game);
+  notifyGameUpdate(game.code);
+}
 
 async function generateUniqueGameCode(): Promise<string> {
   let attempts = 0;
@@ -34,6 +42,7 @@ export async function createGame(name: string, createdBy: string): Promise<Game>
     name,
     createdAt: new Date().toISOString(),
     createdBy,
+    version: 0,
     stage: 'unstarted',
     players: [
       // Automatically join the creator with the first available color (red)
@@ -42,10 +51,7 @@ export async function createGame(name: string, createdBy: string): Promise<Game>
     maxPlayers: 4,
   };
 
-  // Write to file
-  const gamePath = storage.getGameFilePath(code);
-  await storage.writeJsonFile(gamePath, game);
-
+  await saveGame(game);
   return game;
 }
 
@@ -117,9 +123,7 @@ export async function addUserToGame(code: string, username: string, color?: Play
   // Add player with assigned color
   game.players.push({ username, color: assignedColor });
 
-  // Write updated game
-  const gamePath = storage.getGameFilePath(code);
-  await storage.writeJsonFile(gamePath, game);
+  await saveGame(game);
 }
 
 // Start the game - randomizes player order and sets game to playing stage
@@ -183,9 +187,7 @@ export async function startGame(code: string, username: string): Promise<void> {
   game.tokenPositions = tokenPositions;
   game.collectedTokens = collectedTokens;
 
-  // Write updated game
-  const gamePath = storage.getGameFilePath(code);
-  await storage.writeJsonFile(gamePath, game);
+  await saveGame(game);
 }
 
 // Update a player's color in an unstarted game
@@ -215,9 +217,7 @@ export async function updatePlayerColor(code: string, username: string, newColor
   // Update the player's color
   game.players[playerIndex].color = newColor;
 
-  // Write updated game
-  const gamePath = storage.getGameFilePath(code);
-  await storage.writeJsonFile(gamePath, game);
+  await saveGame(game);
 }
 
 // Perform a shift action during the shift phase of a player's turn
@@ -287,9 +287,7 @@ export async function performShift(
   game.tileInPlay = pushedTile;
   game.currentPhase = 'move';
 
-  // Save and return
-  const gamePath = storage.getGameFilePath(code);
-  await storage.writeJsonFile(gamePath, game);
+  await saveGame(game);
   return game;
 }
 
@@ -346,8 +344,7 @@ export async function performMove(
         game.stage = 'finished';
         delete game.currentPhase;
         delete game.currentPlayerIndex;
-        const gamePath = storage.getGameFilePath(code);
-        await storage.writeJsonFile(gamePath, game);
+        await saveGame(game);
         return game;
       }
     }
@@ -357,8 +354,7 @@ export async function performMove(
   game.currentPlayerIndex = (playerIndex + 1) % game.players.length;
   game.currentPhase = 'shift';
 
-  const gamePath = storage.getGameFilePath(code);
-  await storage.writeJsonFile(gamePath, game);
+  await saveGame(game);
   return game;
 }
 
@@ -376,8 +372,7 @@ export async function resignGame(code: string, username: string): Promise<Game> 
   delete game.currentPhase;
   delete game.currentPlayerIndex;
 
-  const gamePath = storage.getGameFilePath(code);
-  await storage.writeJsonFile(gamePath, game);
+  await saveGame(game);
   return game;
 }
 

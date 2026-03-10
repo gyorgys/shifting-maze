@@ -1,9 +1,46 @@
 import { Router, Request, Response } from 'express';
 import * as gameService from '../services/gameService';
-import { CreateGameRequest, JoinGameRequest, UpdatePlayerColorRequest, PlayerColor } from '../models/Game';
+import { Game, CreateGameRequest, JoinGameRequest, UpdatePlayerColorRequest, PlayerColor } from '../models/Game';
 import { authenticateToken } from '../middleware/auth';
+import { gameEmitter } from '../utils/gameEvents';
 
 const router = Router();
+
+// Helper: build the full game response object (same shape used by GET, poll, shift, move, resign)
+function formatGameResponse(game: Game): Record<string, unknown> {
+  const response: Record<string, unknown> = {
+    code: game.code,
+    name: game.name,
+    createdBy: game.createdBy,
+    userCount: game.players.length,
+    stage: game.stage,
+    players: game.players,
+    version: game.version ?? 0,
+  };
+
+  if (game.stage === 'unstarted' && game.players.length < game.maxPlayers) {
+    const allColors: PlayerColor[] = ['red', 'green', 'blue', 'white'];
+    const takenColors = game.players.map(p => p.color);
+    response.availableColors = allColors.filter(color => !takenColors.includes(color));
+  }
+
+  if (game.stage === 'playing' && game.currentPlayerIndex !== undefined && game.currentPhase) {
+    const currentPlayer = game.players[game.currentPlayerIndex];
+    response.currentTurn = {
+      username: currentPlayer.username,
+      color: currentPlayer.color,
+      phase: game.currentPhase,
+    };
+  }
+
+  if (game.board) response.board = game.board;
+  if (game.tileInPlay !== undefined) response.tileInPlay = game.tileInPlay;
+  if (game.playerPositions) response.playerPositions = game.playerPositions;
+  if (game.tokenPositions) response.tokenPositions = game.tokenPositions;
+  if (game.collectedTokens) response.collectedTokens = game.collectedTokens;
+
+  return response;
+}
 
 // POST /api/games - Create new game (requires authentication)
 router.post('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
@@ -104,42 +141,7 @@ router.get('/:code', authenticateToken, async (req: Request, res: Response): Pro
       return;
     }
 
-    // Format response with currentTurn if game is playing
-    const response: any = {
-      code: game.code,
-      name: game.name,
-      createdBy: game.createdBy,
-      userCount: game.players.length,
-      stage: game.stage,
-      players: game.players,
-    };
-
-    // Add available colors if game can be joined (unstarted and not full)
-    if (game.stage === 'unstarted' && game.players.length < game.maxPlayers) {
-      const allColors: PlayerColor[] = ['red', 'green', 'blue', 'white'];
-      const takenColors = game.players.map(p => p.color);
-      const availableColors = allColors.filter(color => !takenColors.includes(color));
-      response.availableColors = availableColors;
-    }
-
-    // Add current turn info if game is playing
-    if (game.stage === 'playing' && game.currentPlayerIndex !== undefined && game.currentPhase) {
-      const currentPlayer = game.players[game.currentPlayerIndex];
-      response.currentTurn = {
-        username: currentPlayer.username,
-        color: currentPlayer.color,
-        phase: game.currentPhase,
-      };
-    }
-
-    // Add board state if present
-    if (game.board) response.board = game.board;
-    if (game.tileInPlay !== undefined) response.tileInPlay = game.tileInPlay;
-    if (game.playerPositions) response.playerPositions = game.playerPositions;
-    if (game.tokenPositions) response.tokenPositions = game.tokenPositions;
-    if (game.collectedTokens) response.collectedTokens = game.collectedTokens;
-
-    res.status(200).json(response);
+    res.status(200).json(formatGameResponse(game));
   } catch (error) {
     console.error('Error getting game:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -234,27 +236,7 @@ router.post('/:code/shift', authenticateToken, async (req: Request, res: Respons
     }
 
     const game = await gameService.performShift(code, username, tile, shiftType, shiftIndex, direction);
-
-    // Return full game state (same format as GET /api/games/:code)
-    const currentPlayer = game.players[game.currentPlayerIndex!];
-    res.status(200).json({
-      code: game.code,
-      name: game.name,
-      createdBy: game.createdBy,
-      userCount: game.players.length,
-      stage: game.stage,
-      players: game.players,
-      currentTurn: {
-        username: currentPlayer.username,
-        color: currentPlayer.color,
-        phase: game.currentPhase,
-      },
-      board: game.board,
-      tileInPlay: game.tileInPlay,
-      playerPositions: game.playerPositions,
-      tokenPositions: game.tokenPositions,
-      collectedTokens: game.collectedTokens,
-    });
+    res.status(200).json(formatGameResponse(game));
   } catch (error) {
     console.error('Error performing shift:', error);
 
@@ -289,32 +271,7 @@ router.post('/:code/move', authenticateToken, async (req: Request, res: Response
     }
 
     const game = await gameService.performMove(code, username, row, col);
-
-    // Build response (same shape as /shift)
-    const response: Record<string, unknown> = {
-      code: game.code,
-      name: game.name,
-      createdBy: game.createdBy,
-      userCount: game.players.length,
-      stage: game.stage,
-      players: game.players,
-      board: game.board,
-      tileInPlay: game.tileInPlay,
-      playerPositions: game.playerPositions,
-      tokenPositions: game.tokenPositions,
-      collectedTokens: game.collectedTokens,
-    };
-
-    if (game.stage === 'playing' && game.currentPlayerIndex !== undefined) {
-      const currentPlayer = game.players[game.currentPlayerIndex];
-      response.currentTurn = {
-        username: currentPlayer.username,
-        color: currentPlayer.color,
-        phase: game.currentPhase,
-      };
-    }
-
-    res.status(200).json(response);
+    res.status(200).json(formatGameResponse(game));
   } catch (error) {
     console.error('Error performing move:', error);
 
@@ -343,22 +300,7 @@ router.post('/:code/resign', authenticateToken, async (req: Request, res: Respon
     const username = req.user!.username;
 
     const game = await gameService.resignGame(code, username);
-
-    const response: Record<string, unknown> = {
-      code: game.code,
-      name: game.name,
-      createdBy: game.createdBy,
-      userCount: game.players.length,
-      stage: game.stage,
-      players: game.players,
-      board: game.board,
-      tileInPlay: game.tileInPlay,
-      playerPositions: game.playerPositions,
-      tokenPositions: game.tokenPositions,
-      collectedTokens: game.collectedTokens,
-    };
-
-    res.status(200).json(response);
+    res.status(200).json(formatGameResponse(game));
   } catch (error) {
     console.error('Error resigning game:', error);
 
@@ -411,6 +353,65 @@ router.put('/:code/players/color', authenticateToken, async (req: Request, res: 
     } else {
       res.status(500).json({ error: 'Internal server error' });
     }
+  }
+});
+
+// GET /api/games/:code/poll?version=N - Long poll for game state changes
+router.get('/:code/poll', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  const { code } = req.params;
+  const clientVersion = parseInt(req.query.version as string) || 0;
+  const username = req.user!.username;
+
+  try {
+    const game = await gameService.getGameByCode(code);
+    if (!game) {
+      res.status(404).json({ error: 'Game not found' });
+      return;
+    }
+    if (!game.players.some(p => p.username === username)) {
+      res.status(403).json({ error: 'Not authorized' });
+      return;
+    }
+
+    // Already newer — respond immediately
+    if ((game.version ?? 0) > clientVersion) {
+      res.status(200).json(formatGameResponse(game));
+      return;
+    }
+
+    // Wait for update event
+    let done = false;
+
+    const onUpdate = async () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      try {
+        const updated = await gameService.getGameByCode(code);
+        if (updated) res.status(200).json(formatGameResponse(updated));
+        else res.status(404).json({ error: 'Game not found' });
+      } catch {
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    };
+
+    const timer = setTimeout(() => {
+      if (done) return;
+      done = true;
+      gameEmitter.removeListener(`update:${code}`, onUpdate);
+      res.status(200).json({ changed: false });
+    }, 30000);
+
+    req.on('close', () => {
+      done = true;
+      clearTimeout(timer);
+      gameEmitter.removeListener(`update:${code}`, onUpdate);
+    });
+
+    gameEmitter.once(`update:${code}`, onUpdate);
+  } catch (error) {
+    console.error('Error in poll endpoint:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

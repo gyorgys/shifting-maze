@@ -283,3 +283,22 @@ export async function startGame(gameCode: string, token: string): Promise<void> 
     throw error;
   }
 }
+
+export async function pollGameState(
+  gameCode: string,
+  token: string,
+  version: number,
+  signal: AbortSignal
+): Promise<{ changed: true; game: Game } | { changed: false }> {
+  const response = await fetch(
+    `/api/games/${gameCode}/poll?version=${version}`,
+    { headers: { Authorization: `Bearer ${token}` }, signal }
+  );
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || `HTTP ${response.status}`);
+  }
+  const data = await response.json();
+  if (data.changed === false) return { changed: false };
+  return { changed: true, game: data as Game };
+}

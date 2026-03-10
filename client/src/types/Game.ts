@@ -30,6 +30,7 @@ export interface Game {
   userCount: number;
   stage: GameStage;
   players: Player[];
+  version?: number;
   availableColors?: PlayerColor[];
   currentTurn?: CurrentTurn;
 

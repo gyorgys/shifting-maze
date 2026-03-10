@@ -690,6 +690,46 @@ Moves the current player's piece to a new position during the move phase. Valida
 
 ---
 
+### Poll Game State (Long Poll)
+
+Waits for the game version to increase beyond the provided version, then returns the updated game state. Clients use this to receive other players' actions in near-real-time without polling on a fixed interval.
+
+**Endpoint:** `GET /api/games/:code/poll?version=N`
+
+**Authentication:** Required
+
+**Query parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `version` | `number` | The caller's current game version. The server returns as soon as `game.version > N`. |
+
+**Response on change (200):** Full game state (same shape as `GET /api/games/:code`), with `version` field.
+
+**Response on timeout (200, no change within 30 s):**
+```json
+{ "changed": false }
+```
+
+**Error codes:**
+
+| Code | Reason |
+|------|--------|
+| 403 | Not a player in this game |
+| 404 | Game not found |
+| 500 | Internal server error |
+
+**How it works:**
+- Each write in `gameService` increments `game.version` and emits an in-process event via `gameEmitter`.
+- The poll handler subscribes to the event for the specific game code.
+- If the stored version is already newer than `N`, it responds immediately.
+- Otherwise it waits up to 30 seconds for the event, then returns `{ changed: false }` so the client can loop.
+- Aborted requests (browser tab close) are handled cleanly via `req.on('close', ...)`.
+
+**Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts), [server/src/utils/gameEvents.ts](../../server/src/utils/gameEvents.ts)
+
+---
+
 ## Authentication Flow
 
 The system uses client-side password hashing and JWT tokens for security:
