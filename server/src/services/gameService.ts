@@ -366,11 +366,38 @@ export async function resignGame(code: string, username: string): Promise<Game> 
 
   const playerIndex = game.players.findIndex(p => p.username === username);
   if (playerIndex === -1) throw new Error('User is not in this game');
-  if (game.currentPlayerIndex !== playerIndex) throw new Error('Not your turn');
 
-  game.stage = 'finished';
-  delete game.currentPhase;
-  delete game.currentPlayerIndex;
+  const resigningColor = game.players[playerIndex].color;
+
+  // Remove the resigning player
+  game.players.splice(playerIndex, 1);
+  if (game.playerPositions) delete game.playerPositions[resigningColor];
+  if (game.collectedTokens) delete game.collectedTokens[resigningColor];
+
+  if (game.players.length === 1) {
+    // Last player remaining: collect all tokens still on the board
+    const lastColor = game.players[0].color;
+    if (game.tokenPositions && game.collectedTokens) {
+      const remainingTokenIds = Object.keys(game.tokenPositions).map(Number);
+      game.collectedTokens[lastColor].push(...remainingTokenIds);
+      game.tokenPositions = {};
+    }
+    game.stage = 'finished';
+    delete game.currentPhase;
+    delete game.currentPlayerIndex;
+  } else {
+    // Adjust currentPlayerIndex after removal
+    const currentIdx = game.currentPlayerIndex!;
+    if (playerIndex < currentIdx) {
+      // Resigning player was before the current player — shift index down
+      game.currentPlayerIndex = currentIdx - 1;
+    } else if (playerIndex === currentIdx) {
+      // It was the resigning player's turn — advance to next player
+      game.currentPlayerIndex = currentIdx % game.players.length;
+      game.currentPhase = 'shift';
+    }
+    // If playerIndex > currentIdx, no adjustment needed
+  }
 
   await saveGame(game);
   return game;

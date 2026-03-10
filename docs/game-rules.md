@@ -290,13 +290,20 @@ Player 3: Shift → Move → Next Player
 
 ### 5. Game End
 
-- **End Condition**: Game ends when all 21 tokens have been collected
+- **End Condition**: Game ends when all 21 tokens have been collected, or when all but one player has resigned
 - **Win Condition**: Player with the highest score wins
 - **Scoring**: Sum of all collected token values
   - Tokens 0-19 = 1-20 points respectively
   - Token 20 = 25 points
   - Maximum possible score: 231 points (sum of 1+2+3+...+20+25)
 - Game stage changes to "finished"
+
+### 6. Resignation
+
+- Any player can resign at any time during the game (not restricted to their turn)
+- The resigning player is removed from the game (their position, collected tokens, and color are removed)
+- **If one player remains**: that player automatically collects all tokens still on the board, then the game ends; winner is determined by score
+- **If two or more players remain**: the game continues normally; if it was the resigning player's turn, the turn advances to the next player
 
 ## Current Implementation Status
 
@@ -331,7 +338,7 @@ Player 3: Shift → Move → Next Player
 - ❌ Score calculation and display
 - ❌ Game end detection (all tokens collected)
 - ❌ Winner determination and final scoring
-- ❌ Player leaving game
+- ✅ Player resignation
 - ❌ Game history and replay
 
 ## Technical Implementation Notes

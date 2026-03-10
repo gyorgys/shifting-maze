@@ -235,7 +235,7 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
             {!confirmingResign ? (
               <button
                 className="btn btn-sm btn-danger"
-                disabled={!isMyTurn || isResigning}
+                disabled={isResigning}
                 onClick={() => setConfirmingResign(true)}
               >
                 Resign
