@@ -611,6 +611,125 @@ App
                 └── PlayerMarker (×2-4)
 ```
 
+## Test IDs (`data-testid`)
+
+All interactive and dynamic UI elements carry `data-testid` attributes for automated browser testing. The convention is kebab-case, descriptive, and stable across visual changes.
+
+### Naming Convention
+
+| Element type | Pattern | Example |
+|---|---|---|
+| Form element | `{form}-form` | `login-form` |
+| Text input | `{form}-{field}-input` | `login-username-input` |
+| Submit button | `{form}-submit-button` | `login-submit-button` |
+| Error display | `{context}-error` | `login-error`, `game-shift-error` |
+| Success display | `{context}-success` | `join-game-success` |
+| Page/view container | `{view}-page` | `auth-page`, `home-page`, `game-page` |
+| Toggle/navigation button | `{context}-{action}-button` | `auth-toggle-login`, `back-to-games-button` |
+| Header controls | descriptive noun | `logout-button`, `current-user` |
+| List container | `{entity}-list` | `games-list`, `game-players-list` |
+| List state divs | `{list}-{state}` | `games-loading`, `games-error`, `games-empty` |
+| Per-item elements | `{entity}-{id}-{part}` | `game-ABCD-card`, `game-ABCD-start-button` |
+| Board tile | `board-tile-{row}-{col}` | `board-tile-0-0` |
+| Shift arrow | `shift-arrow-{type}-{index}-{direction}` | `shift-arrow-row-1-right` |
+| Token | `token-{tokenId}` | `token-5` |
+| Player | `player-{color}` | `player-red` |
+
+### Full Reference
+
+**Auth / App (`App.tsx`)**
+- `auth-page` — auth view container
+- `auth-toggle-login` — "Login" link in create-account view
+- `auth-toggle-create` — "Create one" link in login view
+- `home-page` — home/games view container
+- `back-to-games-button` — back navigation button in game detail header
+
+**AppHeader (`AppHeader.tsx`)**
+- `current-user` — logged-in user's display name
+- `logout-button` — logout button
+
+**LoginForm (`LoginForm.tsx`)**
+- `login-form` — `<form>` element
+- `login-username-input`, `login-password-input` — inputs
+- `login-submit-button` — submit button
+- `login-error` — error message
+
+**CreateUserForm (`CreateUserForm.tsx`)**
+- `create-user-form` — `<form>` element
+- `create-user-username-input`, `create-user-displayname-input`, `create-user-password-input`, `create-user-confirm-password-input` — inputs
+- `create-user-submit-button` — submit button
+- `create-user-error` — API error message
+
+**CreateGameForm (`CreateGameForm.tsx`)**
+- `create-game-form` — `<form>` element
+- `create-game-name-input` — name input
+- `create-game-submit-button` — submit button
+- `create-game-error` — error message
+
+**JoinGameForm (`JoinGameForm.tsx`)**
+- `join-game-form` — `<form>` element
+- `join-game-code-input` — code input
+- `join-game-submit-button` — submit button
+- `join-game-error` — error message
+- `join-game-success` — success message
+
+**GamesList (`GamesList.tsx`)**
+- `games-list` — root container (success state)
+- `games-refresh-button` — manual refresh button
+- `games-loading` — loading state div
+- `games-error` — error state div
+- `games-empty` — empty state div
+- Per game (where `{code}` is the 4-letter game code):
+  - `game-{code}-card` — `<li>` card
+  - `game-{code}-name` — game name display
+  - `game-{code}-stage` — stage display
+  - `game-{code}-current-turn` — current turn info (playing games only)
+  - `game-{code}-color-select` — color dropdown (unstarted games only)
+  - `game-{code}-start-button` — Start Game button (creator only)
+  - `game-{code}-view-button` — View Game button (playing/finished games only)
+
+**GamePage (`GamePage.tsx`)**
+- `game-page` — root container
+- `game-stage` — stage text
+- `game-players-list` — `<ul>` of players
+- `game-shift-error` — shift error message
+
+**GameBoard (`GameBoard.tsx`)**
+- `game-board` — root `<div>` wrapper
+- Shift arrows (SVG `<polygon>`):
+  - `shift-arrow-row-{rowIdx}-right` — left-side arrow (pushes row right); rowIdx ∈ {1, 3, 5}
+  - `shift-arrow-row-{rowIdx}-left` — right-side arrow (pushes row left)
+  - `shift-arrow-col-{colIdx}-down` — top arrow (pushes column down); colIdx ∈ {1, 3, 5}
+  - `shift-arrow-col-{colIdx}-up` — bottom arrow (pushes column up)
+- Board tiles (SVG `<g>`, one per cell):
+  - `board-tile-{rowIdx}-{colIdx}` — addresses the cell (0-based)
+  - `data-tile-paths` attribute — comma-separated open sides e.g. `"L,R,B"` (L=left, R=right, T=top, B=bottom); derived from the tile bitmask (bit 0=L, bit 1=R, bit 2=T, bit 3=B)
+- Tokens (SVG `<g>`):
+  - `token-{tokenId}` — tokenId 0-20
+  - `data-row` / `data-col` — current board position
+- Players (SVG `<g>`):
+  - `player-{color}` — e.g. `player-red`
+  - `data-row` / `data-col` — current board position
+
+**TileInPlay (`TileInPlay.tsx`)**
+- `tile-in-play` — root container
+- `data-tile-paths` attribute on root — open sides of the current tile (same format as board tiles)
+- `rotate-cw-button` — clockwise rotation button
+- `rotate-ccw-button` — counter-clockwise rotation button
+
+### Usage Example
+
+```javascript
+// Locate elements via DevTools or automation
+document.querySelector('[data-testid="login-form"]')
+document.querySelector('[data-testid="shift-arrow-row-1-right"]')
+document.querySelector('[data-testid="board-tile-3-3"]').dataset.tilePaths  // e.g. "L,R"
+document.querySelector('[data-testid="player-red"]').dataset.row             // e.g. "3"
+document.querySelector('[data-testid="tile-in-play"]').dataset.tilePaths     // e.g. "R,T,B"
+```
+
+---
+
 ## Common Patterns
 
 ### Form Submission Pattern

@@ -99,8 +99,15 @@ export function TileInPlay({ tile, controlsEnabled, onRotationComplete }: TileIn
     }, 300);
   };
 
+  const tilePaths = [
+    displayTile & 1 ? 'L' : null,
+    displayTile & 2 ? 'R' : null,
+    displayTile & 4 ? 'T' : null,
+    displayTile & 8 ? 'B' : null,
+  ].filter(Boolean).join(',');
+
   return (
-    <div className="self-start">
+    <div className="self-start" data-testid="tile-in-play" data-tile-paths={tilePaths}>
       <div className="header2 mb-10">
         Tile in Play:
       </div>
@@ -123,6 +130,7 @@ export function TileInPlay({ tile, controlsEnabled, onRotationComplete }: TileIn
           disabled={!controlsEnabled}
           className="btn btn-icon btn-info"
           title="Rotate Clockwise"
+          data-testid="rotate-cw-button"
         >
           ↻
         </button>
@@ -131,6 +139,7 @@ export function TileInPlay({ tile, controlsEnabled, onRotationComplete }: TileIn
           disabled={!controlsEnabled}
           className="btn btn-icon btn-info"
           title="Rotate Counter-Clockwise"
+          data-testid="rotate-ccw-button"
         >
           ↺
         </button>

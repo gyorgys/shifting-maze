@@ -39,7 +39,7 @@ export function JoinGameForm({ user, onSuccess }: JoinGameFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-container">
+    <form onSubmit={handleSubmit} className="form-container" data-testid="join-game-form">
       <div className="form-group">
         <label htmlFor="gameCode" className="label">
           Game Code:
@@ -54,21 +54,23 @@ export function JoinGameForm({ user, onSuccess }: JoinGameFormProps) {
           placeholder="ABCD"
           maxLength={4}
           required
+          data-testid="join-game-code-input"
         />
       </div>
 
       {error && (
-        <div className="text-error mb-15">{error}</div>
+        <div className="text-error mb-15" data-testid="join-game-error">{error}</div>
       )}
 
       {success && (
-        <div className="text-success mb-15">{success}</div>
+        <div className="text-success mb-15" data-testid="join-game-success">{success}</div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
         className="btn btn-md btn-info"
+        data-testid="join-game-submit-button"
       >
         {submitting ? 'Joining...' : 'Join Game'}
       </button>

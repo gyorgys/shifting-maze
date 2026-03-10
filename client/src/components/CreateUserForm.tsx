@@ -66,7 +66,7 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-container">
+    <form onSubmit={handleSubmit} className="form-container" data-testid="create-user-form">
       <div className="form-group">
         <label htmlFor="username" className="label">
           Username:
@@ -78,6 +78,7 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           onChange={(e) => setUsername(e.target.value)}
           className="input"
           disabled={submitting}
+          data-testid="create-user-username-input"
         />
         {errors.username && <div className="text-supporting color-danger">{errors.username}</div>}
       </div>
@@ -93,6 +94,7 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           onChange={(e) => setDisplayName(e.target.value)}
           className="input"
           disabled={submitting}
+          data-testid="create-user-displayname-input"
         />
         {errors.displayName && (
           <div className="text-supporting color-danger">{errors.displayName}</div>
@@ -110,6 +112,7 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           onChange={(e) => setPassword(e.target.value)}
           className="input"
           disabled={submitting}
+          data-testid="create-user-password-input"
         />
         {errors.password && <div className="text-supporting color-danger">{errors.password}</div>}
       </div>
@@ -125,6 +128,7 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           onChange={(e) => setConfirmPassword(e.target.value)}
           className="input"
           disabled={submitting}
+          data-testid="create-user-confirm-password-input"
         />
         {errors.confirmPassword && (
           <div className="text-supporting color-danger">{errors.confirmPassword}</div>
@@ -132,13 +136,14 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
       </div>
 
       {errors.api && (
-        <div className="text-error mb-15">{errors.api}</div>
+        <div className="text-error mb-15" data-testid="create-user-error">{errors.api}</div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
         className="btn btn-md btn-primary"
+        data-testid="create-user-submit-button"
       >
         {submitting ? 'Creating...' : 'Create Account'}
       </button>

@@ -23,10 +23,11 @@ export function AppHeader({ content, username, onLogout }: AppHeaderProps) {
       <div className="flex items-center gap-12 justify-end">
         {username && onLogout && (
           <>
-            <span className="text-normal">{username}</span>
+            <span className="text-normal" data-testid="current-user">{username}</span>
             <button
               onClick={onLogout}
               className="btn btn-sm btn-danger"
+              data-testid="logout-button"
             >
               Logout
             </button>

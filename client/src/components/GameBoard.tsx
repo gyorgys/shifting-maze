@@ -227,7 +227,7 @@ export function GameBoard({
   const transitionStyle = animating ? `transform ${SHIFT_ANIMATION_MS}ms ease-in-out` : 'none';
 
   return (
-    <div>
+    <div data-testid="game-board">
       <svg
         viewBox={`${-PADDING} ${-PADDING} ${boardSize + 2 * PADDING} ${boardSize + 2 * PADDING}`}
         className="svg-board"
@@ -258,6 +258,7 @@ export function GameBoard({
             <g key={`row-${rowIdx}`}>
               {/* Left arrow - pointing right (pushes from left) */}
               <polygon
+                data-testid={`shift-arrow-row-${rowIdx}-right`}
                 points={`
                   ${-ARROW_GAP},${rowCenterY}
                   ${-ARROW_GAP - ARROW_LENGTH},${rowCenterY - ARROW_WIDTH / 2}
@@ -273,6 +274,7 @@ export function GameBoard({
               />
               {/* Right arrow - pointing left (pushes from right) */}
               <polygon
+                data-testid={`shift-arrow-row-${rowIdx}-left`}
                 points={`
                   ${boardSize + ARROW_GAP},${rowCenterY}
                   ${boardSize + ARROW_GAP + ARROW_LENGTH},${rowCenterY - ARROW_WIDTH / 2}
@@ -298,6 +300,7 @@ export function GameBoard({
             <g key={`col-${colIdx}`}>
               {/* Top arrow - pointing down (pushes from top) */}
               <polygon
+                data-testid={`shift-arrow-col-${colIdx}-down`}
                 points={`
                   ${colCenterX},${-ARROW_GAP}
                   ${colCenterX - ARROW_WIDTH / 2},${-ARROW_GAP - ARROW_LENGTH}
@@ -313,6 +316,7 @@ export function GameBoard({
               />
               {/* Bottom arrow - pointing up (pushes from bottom) */}
               <polygon
+                data-testid={`shift-arrow-col-${colIdx}-up`}
                 points={`
                   ${colCenterX},${boardSize + ARROW_GAP}
                   ${colCenterX - ARROW_WIDTH / 2},${boardSize + ARROW_GAP + ARROW_LENGTH}
@@ -336,9 +340,17 @@ export function GameBoard({
           {board.map((row, rowIdx) =>
             row.map((tile, colIdx) => {
               const transform = getTileTransform(rowIdx, colIdx);
+              const tilePaths = [
+                tile & 1 ? 'L' : null,
+                tile & 2 ? 'R' : null,
+                tile & 4 ? 'T' : null,
+                tile & 8 ? 'B' : null,
+              ].filter(Boolean).join(',');
               return (
                 <g
                   key={`tile-${rowIdx}-${colIdx}`}
+                  data-testid={`board-tile-${rowIdx}-${colIdx}`}
+                  data-tile-paths={tilePaths}
                   style={{ transition: transform !== undefined ? transitionStyle : 'none' }}
                   transform={transform || undefined}
                 >
@@ -390,6 +402,9 @@ export function GameBoard({
             return (
               <g
                 key={`token-${tokenId}`}
+                data-testid={`token-${tokenId}`}
+                data-row={row}
+                data-col={col}
                 style={{ transition: entityTransform !== undefined ? transitionStyle : 'none' }}
                 transform={entityTransform || undefined}
               >
@@ -423,6 +438,9 @@ export function GameBoard({
             return (
               <g
                 key={`player-${color}`}
+                data-testid={`player-${color}`}
+                data-row={row}
+                data-col={col}
                 style={{ transition: entityTransform !== undefined ? transitionStyle : 'none' }}
                 transform={entityTransform || undefined}
               >

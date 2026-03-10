@@ -96,18 +96,18 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
     !isShifting;
 
   return (
-    <div className="grid-game-page">
+    <div className="grid-game-page" data-testid="game-page">
       {/* Info Panel */}
       <div className="card self-start">
         <div className="mb-10">
-          <span className="text-emphasized">Stage:</span> {game.stage}
+          <span className="text-emphasized">Stage:</span> <span data-testid="game-stage">{game.stage}</span>
         </div>
 
 
         {/* Players list */}
         <div>
           <span className="text-emphasized">Players:</span>
-          <ul className="list-compact">
+          <ul className="list-compact" data-testid="game-players-list">
             {game.players.map(player => {
               const isCurrentPlayer = game.currentTurn?.username === player.username;
               return (
@@ -130,7 +130,7 @@ export function GamePage({ gameCode, user, onGameLoaded }: GamePageProps) {
 
         {/* Shift error message */}
         {shiftError && (
-          <div className="text-error mt-10">Shift failed: {shiftError}</div>
+          <div className="text-error mt-10" data-testid="game-shift-error">Shift failed: {shiftError}</div>
         )}
       </div>
 

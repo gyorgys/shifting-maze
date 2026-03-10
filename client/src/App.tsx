@@ -52,7 +52,7 @@ function AuthPage({ login }: { login: (user: any) => void }) {
   return (
     <>
       <AppHeader />
-      <div className="px-20">
+      <div className="px-20" data-testid="auth-page">
         {authView === 'login' ? (
           <>
             <h2>Login</h2>
@@ -62,6 +62,7 @@ function AuthPage({ login }: { login: (user: any) => void }) {
               <button
                 onClick={() => setAuthView('create')}
                 className="btn-link"
+                data-testid="auth-toggle-create"
               >
                 Create one
               </button>
@@ -76,6 +77,7 @@ function AuthPage({ login }: { login: (user: any) => void }) {
               <button
                 onClick={() => setAuthView('login')}
                 className="btn-link"
+                data-testid="auth-toggle-login"
               >
                 Login
               </button>
@@ -107,7 +109,7 @@ function HomePage({ user, logout }: { user: any; logout: () => void }) {
         username={user.displayName}
         onLogout={logout}
       />
-      <div className="px-20">
+      <div className="px-20" data-testid="home-page">
         <h2>Create New Game</h2>
         <CreateGameForm
           user={user}
@@ -159,6 +161,7 @@ function GameDetailPageWrapper({ user, logout }: { user: any; logout: () => void
         onClick={navigateToGames}
         title="Back to Games"
         className="btn-link title"
+        data-testid="back-to-games-button"
       >
         ←
       </button>

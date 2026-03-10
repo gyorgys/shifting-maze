@@ -35,7 +35,7 @@ export function CreateGameForm({ user, onSuccess }: CreateGameFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-container">
+    <form onSubmit={handleSubmit} className="form-container" data-testid="create-game-form">
       <div className="form-group">
         <label htmlFor="gameName" className="label">
           Game Name:
@@ -49,17 +49,19 @@ export function CreateGameForm({ user, onSuccess }: CreateGameFormProps) {
           disabled={submitting}
           placeholder="Enter game name"
           required
+          data-testid="create-game-name-input"
         />
       </div>
 
       {error && (
-        <div className="text-error mb-15">{error}</div>
+        <div className="text-error mb-15" data-testid="create-game-error">{error}</div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
         className="btn btn-md btn-success"
+        data-testid="create-game-submit-button"
       >
         {submitting ? 'Creating...' : 'Create Game'}
       </button>

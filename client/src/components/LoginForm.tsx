@@ -32,7 +32,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form-container">
+    <form onSubmit={handleSubmit} className="form-container" data-testid="login-form">
       <div className="form-group">
         <label htmlFor="username" className="label">
           Username:
@@ -45,6 +45,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           className="input"
           disabled={submitting}
           required
+          data-testid="login-username-input"
         />
       </div>
 
@@ -60,17 +61,19 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           className="input"
           disabled={submitting}
           required
+          data-testid="login-password-input"
         />
       </div>
 
       {error && (
-        <div className="text-error mb-15">{error}</div>
+        <div className="text-error mb-15" data-testid="login-error">{error}</div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
         className="btn btn-md btn-primary"
+        data-testid="login-submit-button"
       >
         {submitting ? 'Logging in...' : 'Login'}
       </button>

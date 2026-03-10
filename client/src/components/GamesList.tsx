@@ -85,12 +85,12 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
   }, [user.username, refresh]);
 
   if (loading) {
-    return <div className="p-20">Loading games...</div>;
+    return <div className="p-20" data-testid="games-loading">Loading games...</div>;
   }
 
   if (error) {
     return (
-      <div className="p-20">
+      <div className="p-20" data-testid="games-error">
         <div className="text-error mb-10">Error: {error}</div>
         <button
           onClick={fetchGames}
@@ -104,19 +104,20 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
 
   if (games.length === 0) {
     return (
-      <div className="p-20">
+      <div className="p-20" data-testid="games-empty">
         <p>No games yet. Create or join a game to get started!</p>
       </div>
     );
   }
 
   return (
-    <div className="p-20">
+    <div className="p-20" data-testid="games-list">
       <div className="flex justify-between items-center mb-15">
         <h3 className="subtitle m-0">Your Games</h3>
         <button
           onClick={fetchGames}
           className="btn btn-sm btn-secondary"
+          data-testid="games-refresh-button"
         >
           Refresh
         </button>
@@ -131,17 +132,18 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
             <li
               key={game.code}
               className="card mb-10"
+              data-testid={`game-${game.code}-card`}
             >
-              <div className="header1 mb-5">
+              <div className="header1 mb-5" data-testid={`game-${game.code}-name`}>
                 {game.name}
               </div>
               <div className="text-supporting color-muted mb-10">
-                Code: <span className="text-emphasized">{game.code}</span> • {game.userCount} player{game.userCount !== 1 ? 's' : ''} • Stage: <span className="text-emphasized">{game.stage}</span>
+                Code: <span className="text-emphasized">{game.code}</span> • {game.userCount} player{game.userCount !== 1 ? 's' : ''} • Stage: <span className="text-emphasized" data-testid={`game-${game.code}-stage`}>{game.stage}</span>
               </div>
 
               {/* Show current turn info if game is playing */}
               {game.currentTurn && (
-                <div className="text-normal color-success mb-10">
+                <div className="text-normal color-success mb-10" data-testid={`game-${game.code}-current-turn`}>
                   Current turn: <span className="text-emphasized">{game.currentTurn.username}</span> ({game.currentTurn.color}) - {game.currentTurn.phase} phase
                 </div>
               )}
@@ -158,6 +160,7 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
                     onFocus={() => handleDropdownFocus(game.code)}
                     disabled={updatingColor === game.code}
                     className={updatingColor === game.code ? 'input cursor-wait' : 'input'}
+                    data-testid={`game-${game.code}-color-select`}
                   >
                     <option value={currentColor}>{currentColor}</option>
                     {availableColors.map(color => (
@@ -193,6 +196,7 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
                     onClick={() => handleStartGame(game.code)}
                     disabled={startingGame === game.code || !hasEnoughPlayers(game)}
                     className="btn btn-md btn-success"
+                    data-testid={`game-${game.code}-start-button`}
                   >
                     {startingGame === game.code ? 'Starting...' : 'Start Game'}
                   </button>
@@ -214,6 +218,7 @@ export function GamesList({ user, refresh, onViewGame }: GamesListProps) {
                   <button
                     onClick={() => onViewGame(game.code)}
                     className="btn btn-md btn-primary"
+                    data-testid={`game-${game.code}-view-button`}
                   >
                     View Game
                   </button>
