@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import * as gameService from '../services/gameService';
 import * as testService from '../services/testService';
+import { getBestMoves } from '../services/botService';
 import { Game, CreateGameRequest, JoinGameRequest, UpdatePlayerColorRequest, PlayerColor } from '../models/Game';
 import { authenticateToken } from '../middleware/auth';
 import { gameEmitter } from '../utils/gameEvents';
@@ -362,6 +363,57 @@ router.put('/:code/players/color', authenticateToken, async (req: Request, res: 
                errorMessage.includes('already taken') ||
                errorMessage.includes('already started')) {
       res.status(409).json({ error: errorMessage });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
+
+// POST /api/games/:code/bot-move - Compute and execute best move for the current player
+router.post('/:code/bot-move', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { code } = req.params;
+    const username = req.user!.username;
+
+    const game = await gameService.getGameByCode(code);
+    if (!game) {
+      res.status(404).json({ error: 'Game not found' });
+      return;
+    }
+    if (game.stage !== 'playing') {
+      res.status(400).json({ error: 'Game is not in progress' });
+      return;
+    }
+    if (game.currentPhase !== 'shift') {
+      res.status(400).json({ error: 'Not in shift phase' });
+      return;
+    }
+    if (!game.players.some(p => p.username === username)) {
+      res.status(403).json({ error: 'Not authorized to act in this game' });
+      return;
+    }
+
+    const { timeLimitMs } = req.body;
+    const limit = (typeof timeLimitMs === 'number' && timeLimitMs > 0) ? timeLimitMs : 5000;
+
+    const currentPlayer = game.players[game.currentPlayerIndex!];
+    const bestTurn = getBestMoves(game, currentPlayer.color, limit);
+
+    await gameService.performShift(code, currentPlayer.username,
+      bestTurn.tileToInsert, bestTurn.shiftType, bestTurn.shiftIndex, bestTurn.direction);
+    const finalGame = await gameService.performMove(code, currentPlayer.username,
+      bestTurn.moveTo[0], bestTurn.moveTo[1]);
+
+    res.json(formatGameResponse(finalGame));
+  } catch (error) {
+    console.error('Error executing bot move:', error);
+    const errorMessage = (error as Error).message;
+    if (errorMessage.includes('not found')) {
+      res.status(404).json({ error: errorMessage });
+    } else if (errorMessage.includes('Not your turn') || errorMessage.includes('not in this game')) {
+      res.status(403).json({ error: errorMessage });
+    } else if (errorMessage.includes('not in progress') || errorMessage.includes('Invalid') || errorMessage.includes('Cannot reverse')) {
+      res.status(400).json({ error: errorMessage });
     } else {
       res.status(500).json({ error: 'Internal server error' });
     }

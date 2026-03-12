@@ -32,7 +32,8 @@
       "mcp__plugin_playwright_playwright__browser_take_screenshot",
       "Bash(node_modules/.bin/tsc --noEmit -p client/tsconfig.json 2>&1 | head -40)",
       "Bash(cd /Users/gyorgy/Documents/Src/shifting_maze/client && node_modules/.bin/tsc --noEmit 2>&1 | head -40)",
-      "Bash(cd /Users/gyorgy/Documents/Src/shifting_maze/server && node_modules/.bin/tsc --noEmit 2>&1 | head -40)"
+      "Bash(cd /Users/gyorgy/Documents/Src/shifting_maze/server && node_modules/.bin/tsc --noEmit 2>&1 | head -40)",
+      "Bash(find /Users/gyorgy/Documents/Src/shifting_maze -type f -name \"*bot*\" -o -name \"*ai*\" -o -name \"*minimax*\" 2>/dev/null | head -20)"
     ]
   }
 }

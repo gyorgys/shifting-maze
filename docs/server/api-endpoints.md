@@ -698,6 +698,51 @@ Moves the current player's piece to a new position during the move phase. Valida
 
 ---
 
+### Execute Bot Move
+
+Computes and executes the best shift and move for the current player using paranoid minimax with alpha-beta pruning and iterative deepening. Both the shift and move phases are performed atomically from the caller's perspective.
+
+**Endpoint:** `POST /api/games/:code/bot-move`
+
+**Authentication:** Required (any player in the game)
+
+**URL Parameters:**
+- `code` - The 4-letter game code
+
+**Request Body:**
+```json
+{
+  "timeLimitMs": 5000
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timeLimitMs` | `number` | Optional. Search time limit in milliseconds (default: 5000). Must be > 0. |
+
+**Success Response (200):** Full game state (same shape as `POST /api/games/:code/move`), after both shift and move have been applied.
+
+**Error codes:**
+
+| Status | Condition |
+|--------|-----------|
+| 400 | Game not in progress, or not in shift phase |
+| 403 | Caller is not a player in this game |
+| 404 | Game not found |
+| 500 | Internal server error |
+
+**Algorithm:** Paranoid minimax (all opponents treated as adversaries) with:
+- Alpha-beta pruning
+- Two-level caching: turn generation cache + transposition table
+- Token-collection pruning (turns that collect the next token dominate non-collecting turns)
+- Time-limited iterative deepening (always returns a valid move within the time limit)
+
+**Note:** The endpoint always plays for whoever's current turn it is. Any authenticated player in the game may call it, making it suitable for automated bots.
+
+**Implementation:** [server/src/routes/games.ts](../../server/src/routes/games.ts), [server/src/services/botService.ts](../../server/src/services/botService.ts)
+
+---
+
 ### Get Possible Moves (Test Users Only)
 
 Returns all legal moves available to the current player, with the board annotated for reachability. This endpoint is restricted to **test users** (users with an empty `passwordHash`) to support automated test clients.
