@@ -34,6 +34,7 @@ function formatGameResponse(game: Game): Record<string, unknown> {
     };
   }
 
+  if (game.lastShift) response.lastShift = game.lastShift;
   if (game.board) response.board = game.board;
   if (game.tileInPlay !== undefined) response.tileInPlay = game.tileInPlay;
   if (game.playerPositions) response.playerPositions = game.playerPositions;
@@ -256,7 +257,7 @@ router.post('/:code/shift', authenticateToken, async (req: Request, res: Respons
       res.status(404).json({ error: errorMessage });
     } else if (errorMessage.includes('Not your turn') || errorMessage.includes('Not in shift phase') || errorMessage.includes('not in this game')) {
       res.status(403).json({ error: errorMessage });
-    } else if (errorMessage.includes('not in progress') || errorMessage.includes('Invalid')) {
+    } else if (errorMessage.includes('not in progress') || errorMessage.includes('Invalid') || errorMessage.includes('Cannot reverse')) {
       res.status(400).json({ error: errorMessage });
     } else {
       res.status(500).json({ error: 'Internal server error' });

@@ -145,10 +145,19 @@ export async function getPossibleMoves(code: string, username: string): Promise<
     // Deduplicate by (shiftType, shiftIndex, direction, tileToInsert)
     const seen = new Set<string>();
 
+    const oppositeDir: Record<string, string> = { left: 'right', right: 'left', up: 'down', down: 'up' };
+
     for (const shiftType of shiftTypes) {
       const directions = shiftType === 'row' ? rowDirections : colDirections;
       for (const shiftIndex of shiftIndices) {
         for (const direction of directions) {
+          // Anti-slide rule: skip shifts that reverse the previous shift
+          if (game.lastShift) {
+            const ls = game.lastShift;
+            if (shiftType === ls.shiftType && shiftIndex === ls.shiftIndex && direction === oppositeDir[ls.direction]) {
+              continue;
+            }
+          }
           for (const rotation of rotations) {
             const tileToInsert = rotateTileNTimes(game.tileInPlay!, rotation);
             const dedupeKey = `${shiftType}:${shiftIndex}:${direction}:${tileToInsert}`;

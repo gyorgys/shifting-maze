@@ -634,6 +634,7 @@ Returns the full game state (same format as Get Game Details), with:
 - Game must be in `shift` phase
 - `shiftIndex` must be 1, 3, or 5 (odd indices only; even indices have fixed tiles)
 - `tile` must be 0-15
+- Anti-slide rule: cannot reverse the previous shift (e.g. if last shift was row 3 left, row 3 right is forbidden); `game.lastShift` in the game state shows the forbidden reverse
 
 **Game State Changes:**
 - Board row/column is shifted, inserting the provided tile

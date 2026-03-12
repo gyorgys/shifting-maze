@@ -221,8 +221,8 @@ Each player's turn consists of two mandatory phases:
 
 **API:** `POST /api/games/:code/shift` with `{ tile, shiftType, shiftIndex, direction }`
 
-**Restrictions** (*planned*):
-- Cannot reverse the previous player's shift immediately (not yet enforced)
+**Restrictions** (*enforced*):
+- Cannot reverse the previous player's shift immediately (anti-slide rule: enforced)
 - Must shift before moving (enforced)
 
 ### Phase 2: Move
@@ -331,7 +331,7 @@ Player 3: Shift → Move → Next Player
 
 ### Not Yet Implemented
 
-- ❌ Shift restrictions (preventing immediate reversal)
+- ✅ Shift restrictions (anti-slide rule: prevents immediate reversal)
 - ❌ Movement validation (path connectivity)
 - ❌ Token collection triggering (lowest-value token only)
 - ❌ Visual indicator for which token is currently collectible

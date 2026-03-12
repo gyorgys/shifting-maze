@@ -258,6 +258,15 @@ export async function performShift(
     throw new Error('Invalid shift index');
   }
 
+  // Anti-slide rule: cannot reverse the previous shift
+  if (game.lastShift) {
+    const oppositeDir: Record<string, string> = { left: 'right', right: 'left', up: 'down', down: 'up' };
+    const ls = game.lastShift;
+    if (shiftType === ls.shiftType && shiftIndex === ls.shiftIndex && direction === oppositeDir[ls.direction]) {
+      throw new Error('Cannot reverse the previous player\'s shift');
+    }
+  }
+
   // Validate tile value
   if (typeof tile !== 'number' || tile < 0 || tile > 15) {
     throw new Error('Invalid tile value');
@@ -286,6 +295,7 @@ export async function performShift(
   // Update game state
   game.tileInPlay = pushedTile;
   game.currentPhase = 'move';
+  game.lastShift = { shiftType, shiftIndex, direction };
 
   await saveGame(game);
   return game;

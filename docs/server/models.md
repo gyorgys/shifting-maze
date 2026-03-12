@@ -160,6 +160,11 @@ interface Game {
   // Turn tracking (only used when stage is 'playing')
   currentPlayerIndex?: number;   // Index into players array
   currentPhase?: TurnPhase;      // 'shift' | 'move'
+  lastShift?: {                  // Most recent shift; used to enforce anti-slide rule
+    shiftType: 'row' | 'column';
+    shiftIndex: number;
+    direction: string;
+  };
 
   // Board state (only present when stage is 'playing')
   board?: number[][];      // 7x7 matrix of tiles (each tile is 0-15 bitmask)

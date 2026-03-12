@@ -44,6 +44,11 @@ export interface Game {
   // Turn tracking (only used when stage is 'playing')
   currentPlayerIndex?: number;  // Index into players array indicating whose turn it is
   currentPhase?: TurnPhase;     // Current phase: 'shift' or 'move'
+  lastShift?: {                 // The most recent shift performed; used to enforce anti-slide rule
+    shiftType: 'row' | 'column';
+    shiftIndex: number;
+    direction: string;
+  };
 
   // Board state (only present when stage is 'playing')
   board?: Tile[][];  // 7x7 matrix of tiles
